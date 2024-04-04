@@ -1,0 +1,1 @@
+rm ../backend/wwwroot/assets/*.js && bun run build && cp -r dist/* ../backend/wwwroot/.
