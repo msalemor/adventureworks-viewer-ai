@@ -2,14 +2,15 @@ from typing import Iterable
 import os
 import io
 import time
+import logging
 from datetime import datetime
 from pathlib import Path
-
-
 from AgentSettings import AgentSettings
 
-from openai.types.beta.threads.message_content_image_file import MessageContentImageFile
-from openai.types.beta.threads.message_content_text import MessageContentText
+from openai import AzureOpenAI
+from openai.types.beta.assistant import Assistant
+from openai.types.beta.threads.text_content_block import TextContentBlock
+from openai.types.beta.threads.image_file_content_block import ImageFileContentBlock
 from openai.types.beta.threads.messages import MessageFile
 from openai.types import FileObject
 from PIL import Image
@@ -17,7 +18,7 @@ from ArgumentException import ArgumentExceptionError
 
 
 class AssistantAgent:
-    def __init__(self, settings, client, name, instructions, data_folder, tools_list, keep_state: bool = False, fn_calling_delegate=None):
+    def __init__(self, settings:AgentSettings, client:AzureOpenAI, name :str, instructions:str, data_folder:str, tools_list, keep_state: bool = False, fn_calling_delegate=None, assistant=None):
         if name is None:
             raise ArgumentExceptionError("name parameter missing")
         if instructions is None:
@@ -25,9 +26,9 @@ class AssistantAgent:
         if tools_list is None:
             raise ArgumentExceptionError("tools_list parameter missing")
 
-        self.assistant = None
-        self.settings = settings
-        self.client = client
+        self.assistant :Assistant = assistant
+        self.settings : AgentSettings= settings
+        self.client : AzureOpenAI = client
         self.name = name
         self.instructions = instructions
         self.data_folder = data_folder
@@ -47,14 +48,20 @@ class AssistantAgent:
     def upload_all_files(self):
         files_in_folder = os.listdir(self.data_folder)
         local_file_list = []
+
         for file in files_in_folder:
-            filePath = self.data_folder + file
+            filePath = os.path.join(self.data_folder,file)
             assistant_file = self.upload_file(filePath)
             self.ai_files.append(assistant_file)
             local_file_list.append(assistant_file)
+
         self.file_ids = [file.id for file in local_file_list]
 
     def get_agent(self):
+        # If the assistant is already created, return
+        if self.assistant is not None:
+            return
+        
         if self.data_folder is not None:
             self.upload_all_files()
             self.assistant = self.client.beta.assistants.create(
@@ -74,7 +81,14 @@ class AssistantAgent:
                 model=self.settings.model_deployment
             )
 
-    def process_prompt(self, user_name: str, user_id: str, prompt: str) -> None:
+    def delete_thread(self,thread):
+        if not self.keep_state:
+            self.client.beta.threads.delete(thread.id)
+            logging.info("Deleted thread: ", thread.id)
+
+
+
+    def process_prompt(self, user_name: str, user_id: str, prompt: str) -> list:
 
         # if keep_state:
         #     thread_id = check_if_thread_exists(user_id)
@@ -100,13 +114,10 @@ class AssistantAgent:
         run = self.client.beta.threads.runs.create(
             thread_id=thread.id,
             assistant_id=self.assistant.id,
-            instructions="Please address the user as Jane Doe. The user has a premium account. Be assertive, accurate, and polite. Ask if the user has further questions. Do not provide explanations for the answers."
-            + "The current date and time is: "
-            + datetime.now().strftime("%x %X")
-            + ". ",
+            instructions= "The current date and time is: " + datetime.now().strftime("%x %X") + ".",
         )
 
-        print("processing ...")
+        #print("processing ...")
         while True:
             run = self.client.beta.threads.runs.retrieve(
                 thread_id=thread.id, run_id=run.id)
@@ -114,25 +125,30 @@ class AssistantAgent:
                 # Handle completed
                 messages = self.client.beta.threads.messages.list(
                     thread_id=thread.id)
-                self.print_messages(user_name, messages)
-                break
+                items= self.print_messages(user_name, messages)                
+                self.delete_thread(thread)
+                return items
             if run.status == "failed":
                 messages = self.client.beta.threads.messages.list(
                     thread_id=thread.id)
-                self.print_messages(user_name, messages)
-                # Handle failed
-                break
+                items = self.print_messages(user_name, messages)
+                self.delete_thread(thread)
+                return items
+                # Handle failed                
             if run.status == "expired":
                 # Handle expired
-                break
+                self.delete_thread(thread)
+                return
             if run.status == "cancelled":
                 # Handle cancelled
-                break
+                self.delete_thread(thread)
+                return
             if run.status == "requires_action":
                 if self.fn_calling_delegate:
                     self.fn_calling_delegate(self.client, thread, run)
             else:
                 time.sleep(5)
+
         if not self.keep_state:
             self.client.beta.threads.delete(thread.id)
             print("Deleted thread: ", thread.id)
@@ -152,23 +168,29 @@ class AssistantAgent:
 
         # Reverse the messages to show the last user message first
         message_list.reverse()
+        output_list = []
 
         # Print the user or Assistant messages or images
         for message in message_list:
             for item in message.content:
                 # Determine the content type
-                if isinstance(item, MessageContentText):
+                logging.info(type(item))
+                if isinstance(item, TextContentBlock):
                     if message.role == "user":
-                        print(f"user: {name}:\n{item.text.value}\n")
+                        #print(f"user: {name}:\n{item.text.value}\n")
+                        #{'role':'assistant','user_name':user_name,'user_id':user_id,'content':content,'columns':[],'rows':[]}
+                        #output_list.append({"role": "user", "content": item.text.value})
+                        output_list.append({'role':'user','user_name':'','user_id':'','content':item.text.value,'columns':[],'rows':[]})
                     else:
-                        print(f"{message.role}:\n{item.text.value}\n")
+                        #print(f"{message.role}:\n{item.text.value}\n")
+                        output_list.append({'role':'assistant','user_name':'','user_id':'','content':item.text.value,'columns':[],'rows':[]})
                     file_annotations = item.text.annotations
                     if file_annotations:
                         for annotation in file_annotations:
                             file_id = annotation.file_path.file_id
                             content = self.read_assistant_file(file_id)
                             print(f"Annotation Content:\n{str(content)}\n")
-                elif isinstance(item, MessageContentImageFile):
+                elif isinstance(item, ImageFileContentBlock):
                     # Retrieve image from file id
                     data_in_bytes = self.read_assistant_file(
                         item.image_file.file_id)
@@ -182,11 +204,22 @@ class AssistantAgent:
                     # Display image
                     image.show()
 
+        return output_list
+
     def cleanup(self):
-        print(self.client.beta.assistants.delete(self.assistant.id))
-        print("Deleting: ", len(self.ai_threads), " threads.")
-        for thread in self.ai_threads:
-            print(self.client.beta.threads.delete(thread.id))
-        print("Deleting: ", len(self.ai_files), " files.")
-        for file in self.ai_files:
-            print(self.client.files.delete(file.id))
+        try:
+            print(self.client.beta.assistants.delete(self.assistant.id))
+            print("Deleting: ", len(self.ai_threads), " threads.")
+        except:
+            print("Error deleting assistant")
+        try:
+            for thread in self.ai_threads:
+                print(self.client.beta.threads.delete(thread.id))
+        except:
+            print("Error delete threads")
+        try:
+            print("Deleting: ", len(self.ai_files), " files.")
+            for file in self.ai_files:
+                print(self.client.files.delete(file.id))
+        except:
+            print("Error deleting files")

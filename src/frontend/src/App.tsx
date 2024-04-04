@@ -4,6 +4,12 @@ import DataGrid, { SortColumn } from 'react-data-grid';
 import axios from 'axios'
 import { RiSendPlane2Fill } from "react-icons/ri"
 import { MdOutlineClear } from "react-icons/md"
+import { Puff } from 'react-loader-spinner'
+import { BsPersonFill } from "react-icons/bs"
+import { BsPersonFillUp } from "react-icons/bs"
+import { RiProductHuntLine } from "react-icons/ri"
+import { RiProductHuntFill } from "react-icons/ri"
+import { GiCargoCrate } from "react-icons/gi"
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
 // import './App.css'
@@ -32,7 +38,7 @@ interface IResponse {
   user_id: string,
   content: string,
   columns: any[],
-  rows: any[]
+  rows: any[],
 }
 
 const Settings = {
@@ -68,6 +74,7 @@ interface IMessage {
   role: string
   content: string
   imageUrl: string | null
+  mode: Mode | null
 }
 
 function App() {
@@ -139,21 +146,40 @@ function App() {
       //alert('Processing')
       const payload = { input: input }
       let msgs = messages
-      msgs.push({ role: 'user', content: input, imageUrl: null })
-      setMessages(msgs)
       //setMessages([...messages, ...{ role: 'user', content: input, imageUrl: null }])
       let URL = URL_BASE
+      let resp: any = null
+
       if (settings.mode === Mode.Chatbot) {
+        msgs.push({ role: 'user', content: input, imageUrl: null, mode: null })
+        setMessages(msgs)
         URL += 'api/chatbot'
+        resp = await axios.post<IResponse>(URL, payload)
+        let data = resp.data
+        msgs.push({ role: 'assistant', content: data.content, imageUrl: null, mode: settings.mode })
+        setMessages(msgs)
       } else if (settings.mode === Mode.SqlBot) {
+        msgs.push({ role: 'user', content: input, imageUrl: null, mode: null })
+        setMessages(msgs)
         URL += 'api/sqlbot'
+        resp = await axios.post<IResponse>(URL, payload)
+        const data = resp.data
+        msgs.push({ role: 'assistant', content: data.content, imageUrl: null, mode: settings.mode })
+        setMessages(msgs)
+        setGridColsRow({ columns: data.columns, rows: data.rows })
+        if (data.rows && data.rows.length > 0) {
+          msgs.push({ role: 'assistant', content: "Please check the grid for the answer.", imageUrl: null, mode: settings.mode })
+          setMessages(msgs)
+        }
+      } if (settings.mode === Mode.Assistant) {
+        URL += 'api/assistants'
+        resp = await axios.post<IResponse[]>(URL, payload)
+        const data = resp.data
+        data.forEach((msg: IResponse) => {
+          msgs.push({ role: msg.role, content: msg.content, imageUrl: null, mode: (msg.role === "assistant" ? settings.mode : null) })
+        })
       }
-      const resp = await axios.post<IResponse>(URL, payload)
-      const data = resp.data
-      //setMessages([...messages, { role: 'assistant', content: data.content, imageUrl: null }])
-      msgs.push({ role: 'assistant', content: data.content, imageUrl: null })
-      setMessages(msgs)
-      setGridColsRow({ columns: data.columns, rows: data.rows })
+
     }
     catch (error) {
       console.error(error)
@@ -192,7 +218,7 @@ function App() {
           checked={settings.mode === Mode.Assistant}
           onChange={() => setSettings({ ...settings, mode: Mode.Assistant })}
         />
-        <label htmlFor='assistants'>Assistant</label>
+        <label htmlFor='assistants'>Assistants API</label>
         <input type="radio" name="opt1" id='multiagent'
           checked={settings.mode === Mode.MultiAgent}
           onChange={() => setSettings({ ...settings, mode: Mode.MultiAgent })}
@@ -200,37 +226,35 @@ function App() {
         <label htmlFor='multiagent'>Multi-agent</label>
       </nav>
       <section className='h-[100px] flex space-x-1 bg-slate-900'>
-        <div className='w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
+        <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
           onClick={(evt) => getGridDate(evt, 'customers')}
         >
-          <label>{recordCounts.customers.count}</label>
-          <label className='font-semibold uppercase'>Customers</label>
+          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.customers.count}</label>
+          <label className='font-semibold uppercase text-3xl'><BsPersonFill title='Customers' /></label>
         </div>
-        <div className='w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
+        <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
           onClick={(evt) => getGridDate(evt, 'sales')}
         >
-          <label>{recordCounts.topCustomers.count}</label>
-          <label className='font-semibold uppercase'>Top</label>
-          <label className='font-semibold uppercase'>Customers</label>
+          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.topCustomers.count}</label>
+          <label className='font-semibold uppercas text-3xl'><BsPersonFillUp title='Top Customers' /></label>
         </div>
-        <div className='w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
+        <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
           onClick={(evt) => getGridDate(evt, 'products')}
         >
-          <label>{recordCounts.products.count}</label>
-          <label className='font-semibold uppercase'>Products</label>
+          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.products.count}</label>
+          <label className='font-semibold uppercase text-3xl'><RiProductHuntLine title='Products' /></label>
         </div>
-        <div className='w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
+        <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
           onClick={(evt) => getGridDate(evt, 'sold')}
         >
-          <label>{recordCounts.topProducts.count}</label>
-          <label className='font-semibold uppercase'>Top</label>
-          <label className='font-semibold uppercase'>Products</label>
+          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.topProducts.count}</label>
+          <label className='font-semibold uppercase text-3xl'><RiProductHuntFill title='Top Products' /></label>
         </div>
-        <div className='w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
+        <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
           onClick={(evt) => getGridDate(evt, 'orders')}
         >
-          <label>{recordCounts.orderDetails.count}</label>
-          <label className='font-semibold uppercase'>Orders</label>
+          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.orderDetails.count}</label>
+          <label className='font-semibold uppercase text-3xl'><GiCargoCrate title='Orders' /></label>
         </div>
       </section>
 
@@ -244,9 +268,24 @@ function App() {
         <aside className={(settings.mode == Mode.NoAI ? 'invisible' : 'md:w-1/3 flex flex-col')}>
           <div className='h-[calc(100vh-75px-35px-100px-150px)] flex flex-col overflow-auto p-2 space-y-2'>
             {messages.map((msg) => <>
-              {msg.role === 'user' && <div className='bg-slate-200 p-2 rounded-lg w-[90%] ml-auto'>{msg.content}</div>}
-              {msg.role !== 'user' && <div className='bg-slate-300 p-2 rounded-lg w-[90%]'>{msg.content}</div>}
+              {msg.role === 'user' && <div className='bg-slate-200 p-2 rounded-lg w-[90%] ml-auto'>
+                {msg.content}
+              </div>}
+              {msg.role !== 'user' && <div className='bg-slate-300 p-2 rounded-lg w-[90%]'>
+                <span className='font-semibold'>{msg.mode}: </span>{msg.content}</div>}
+
             </>)}
+            {processing && <div className='bg-slate-200 p-2 rounded-lg w-[90%]'>
+              <Puff
+                visible={true}
+                height="25"
+                width="25"
+                color="grey"
+                ariaLabel="puff-loading"
+                wrapperStyle={{}}
+                wrapperClass=""
+              />
+            </div>}
           </div>
           <div className='h-[150px] bg-blue-100 p-2 flex flex-row'>
             <textarea className='w-full outline-none px-1'

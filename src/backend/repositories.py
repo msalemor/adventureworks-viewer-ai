@@ -188,26 +188,6 @@ def get_order_details_count():
     row = cursor.fetchone()
     return {'count':row['count']}
 
-def export_customers_as_csv():
-    cursor = conn.cursor()
-    sql_cmd = """select * from SalesLT.vCustomers order by lastname,firstname"""
-    cursor.execute(sql_cmd)
-    rows = cursor.fetchall()
-    with open('wwwroot/assets/data/customers.csv', 'w') as f:
-        f.write("CustomerID,FirstName,LastName,EmailAddress,SalesPerson,City,StateProvince,CountryRegion,Orders,TotalDue\n")
-        for row in rows:
-            f.write(f"{row['CustomerID']},{row['FirstName']},{row['LastName']},{row['EmailAddress']},{row['SalesPerson']},{row['City']},{row['StateProvince']},{row['CountryRegion']},{row['Orders']},{row['TotalDue']}\n")
-
-def export_products_as_csv():
-    cursor = conn.cursor()
-    sql_cmd = """select * from [SalesLT].[vProductAndDescription] where culture = 'en' order by description"""
-    cursor.execute(sql_cmd)
-    rows = cursor.fetchall()
-    with open('wwwroot/assets/data/products.csv', 'w') as f:
-        f.write("ProductID,Name,Description\n")
-        for row in rows:
-            f.write(f"{row['ProductID']},{row['Name']},{row['Description']}\n")
-
 def get_all_counts():
     results = {
         'customers':get_customer_count(),
@@ -218,35 +198,21 @@ def get_all_counts():
     }
     return results
 
-def export_top_sales_as_csv():
-    cursor = conn.cursor()
-    sql_cmd = """select * from [SalesLT].[vTopSales] order by total"""
-    cursor.execute(sql_cmd)
-    rows = cursor.fetchall()
-    with open('wwwroot/assets/data/top_sales.csv', 'w') as f:
-        f.write("CustomerID,LastName,FirstName,EmailAddress,SalesPerson,Total,City,StateProvince,CountryRegion\n")
+def export_top_customers_csv():
+    rowsancols = get_top_customers()
+    rows = rowsancols['rows']
+    with open('wwwroot/assets/data/top_customers.csv', 'w') as f:
+        f.write("CustomerID,LastName,FirstName,EmailAddress,SalesPerson,City,StateProvince,CountryRegion,Total\n")
         for row in rows:
-            f.write(f"{row['CustomerID']},{row['LastName']},{row['FirstName']},{row['EmailAddress']},{row['SalesPerson']},{row['Total']},{row['City']},{row['StateProvince']},{row['CountryRegion']}\n")
+            f.write(f"{row['CustomerID']},{row['LastName']},{row['FirstName']},{row['EmailAddress']},{row['SalesPerson']},{row['City']},{row['StateProvince']},{row['CountryRegion']},{row['Total']}\n")
 
-def export_top_products_sold_as_csv():
-    cursor = conn.cursor()
-    sql_cmd = """select * from [SalesLT].[vTopProductsSold] order by TotalQty desc"""
-    cursor.execute(sql_cmd)
-    rows = cursor.fetchall()
-    with open('wwwroot/assets/data/products_sold.csv', 'w') as f:
+def export_top_products_csv():
+    rowsancols = get_top_products()
+    rows = rowsancols['rows']
+    with open('wwwroot/assets/data/top_products.csv', 'w') as f:
         f.write("ProductId,category,model,description,TotalQty\n")
         for row in rows:
             f.write(f"{row['ProductId']},{row['category']},{row['model']},{row['description']},{row['TotalQty']}\n")
-
-def export_order_details_as_csv():
-    cursor = conn.cursor()
-    sql_cmd = """select * from [SalesLT].[vOrderDetails] order by customerid,salesorderid,productid"""
-    cursor.execute(sql_cmd)
-    rows = cursor.fetchall()
-    with open('wwwroot/assets/data/order_details.csv', 'w') as f:
-        f.write("CustomerID,SalesOrderID,ProductID,Category,Model,Description,OrderQty,UnitPrice,UnitPriceDiscount,LineTotal\n")
-        for row in rows:
-            f.write(f"{row['CustomerID']},{row['SalesOrderID']},{row['ProductID']},{row['Category']},{row['Model']},{row['Description']},{row['OrderQty']},{row['UnitPrice']},{row['UnitPriceDiscount']},{row['LineTotal']}\n")
 
 def sql_executor(sql_cmd:str) -> dict:
     try:
