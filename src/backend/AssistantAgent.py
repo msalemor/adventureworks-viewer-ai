@@ -1,6 +1,7 @@
 from typing import Iterable
 import os
 import io
+import uuid
 import time
 import logging
 from datetime import datetime
@@ -157,7 +158,7 @@ class AssistantAgent:
         response_content = self.client.files.content(file_id)
         return response_content.read()
 
-    def print_messages(self, name: str, messages: Iterable[MessageFile]) -> None:
+    def print_messages(self, name: str, messages: Iterable[MessageFile]) -> list:
         message_list = []
 
         # Get all the messages till the last user message
@@ -195,14 +196,32 @@ class AssistantAgent:
                     data_in_bytes = self.read_assistant_file(
                         item.image_file.file_id)
                     # Convert bytes to image
-                    readable_buffer = io.BytesIO(data_in_bytes)
-                    image = Image.open(readable_buffer)
-                    # Resize image to fit in terminal
-                    width, height = image.size
-                    image = image.resize(
-                        (width // 2, height // 2), Image.LANCZOS)
-                    # Display image
-                    image.show()
+                    #readable_buffer = io.BytesIO(data_in_bytes)
+                    # write bytes to file
+
+                    # create a folder if it does not exit
+                    image_folder_path = "wwwroot/images"
+                    if not os.path.exists(image_folder_path):
+                        os.makedirs(image_folder_path)
+
+                    # create a file
+                    file_name = uuid.uuid4().hex + ".png"
+                    fullFilePath = os.path.join(image_folder_path, file_name)
+                    
+                    with open(fullFilePath, "wb") as f:
+                        f.write(data_in_bytes)
+
+                    url_content = f"/images/{file_name}"
+                    output_list.append({'role':'image','user_name':'','user_id':'','content':url_content,'columns':[],'rows':[]})
+
+
+                    # image = Image.open(readable_buffer)
+                    # # Resize image to fit in terminal
+                    # width, height = image.size
+                    # image = image.resize(
+                    #     (width // 2, height // 2), Image.LANCZOS)
+                    # # Display image
+                    # image.show()
 
         return output_list
 
