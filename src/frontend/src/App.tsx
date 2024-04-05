@@ -10,47 +10,16 @@ import { BsPersonFillUp } from "react-icons/bs"
 import { RiProductHuntLine } from "react-icons/ri"
 import { RiProductHuntFill } from "react-icons/ri"
 import { GiCargoCrate } from "react-icons/gi"
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-// import './App.css'
+import { ICounts, IGridColsRow, IMessage, IResponse, ISettings, Mode } from './intefaces';
 
-//const URL_BASE = 'http://127.0.0.1:8000'
-const URL_BASE = ''
-
-enum Mode {
-  NoAI = 'noai',
-  Chatbot = 'chatbot',
-  SqlBot = 'sqlbot',
-  Assistant = 'assitant',
-  MultiAgent = 'multiagent',
-}
-
-interface ISettings {
-  mode: Mode,
-  max_token: string,
-  temperature: string
-}
-
-// {'role':'assistant','user_name':user_name,'user_id':user_id,'content':content,'columns':columns,'rows':rows}
-interface IResponse {
-  role: string,
-  user_name: string,
-  user_id: string,
-  content: string,
-  columns: any[],
-  rows: any[],
-}
+const URL_BASE = 'http://127.0.0.1:8000'
+//const URL_BASE = ''
 
 const Settings = {
   mode: Mode.Chatbot,
   max_token: '500',
   temperature: '0.3',
 }
-interface IGridColsRow {
-  columns: any[],
-  rows: any[]
-}
-
 const Counts = {
   customers: 0,
   topCustomers: 0,
@@ -59,22 +28,9 @@ const Counts = {
   orderDetails: 0
 }
 
-interface ICounts {
-  customers: number
-  topCustomers: number
-  products: number
-  topProducts: number
-  orderDetails: number
-}
-
-interface IMessage {
-  role: string
-  content: string
-  imageUrl: string | null
-  mode: Mode | null
-}
-
 function App() {
+
+  // state
   const [settings, setSettings] = useState<ISettings>(Settings)
   const [processing, setProcessing] = useState(false)
   const [gridColsRow, setGridColsRow] = useState<IGridColsRow>({ columns: [], rows: [] })
@@ -83,17 +39,17 @@ function App() {
   const [input, setInput] = useState<string>('')
   const [messages, setMessages] = useState<IMessage[]>([])
 
+  // effetcs
   useEffect(() => {
     fetch(URL_BASE + '/api/counts')
       .then(resp => resp.json())
       .then((data: ICounts) => {
         console.info(data)
-        //data.customers = data.customers ? data.customers : 0
-        //setRecordCounts({ customers: data.customers, topCustomers: data.topCustomers, products: data.products, topProducts: data.topProducts, orderDetails: data.orderDetails })
         setRecordCounts(data)
       })
   }, [])
 
+  // supporting functions
   const getGridDate = async (evt: any, target: string) => {
     evt.preventDefault();
 
@@ -136,49 +92,35 @@ function App() {
   const Process = async () => {
     if (processing) return
     setProcessing(true)
+
     try {
-      // axios.post(URL_BASE + 'api/process', { input: input })
-      //   .then(resp => {
-      //     console.log(resp.data)
-      //     setMessages([...messages, { role: 'user', content: input, imageUrl: null }])
-      //     setMessages([...messages, { role: 'assistant', content: resp.data, imageUrl: null }])
-      //   })
-      //alert('Processing')
       const payload = { input: input }
       let msgs = messages
-      //setMessages([...messages, ...{ role: 'user', content: input, imageUrl: null }])
       let URL = URL_BASE
-      let resp: any = null
 
       if (settings.mode === Mode.Chatbot) {
-        msgs.push({ role: 'user', content: input, imageUrl: null, mode: null })
-        setMessages(msgs)
-        URL += '/api/chatbot'
-        resp = await axios.post<IResponse>(URL, payload)
-        let data = resp.data
-        msgs.push({ role: 'assistant', content: data.content, imageUrl: null, mode: settings.mode })
-        setMessages(msgs)
+        URL = URL_BASE + '/api/chatbot'
       } else if (settings.mode === Mode.SqlBot) {
-        msgs.push({ role: 'user', content: input, imageUrl: null, mode: null })
-        setMessages(msgs)
-        URL += '/api/sqlbot'
-        resp = await axios.post<IResponse>(URL, payload)
-        const data = resp.data
-        msgs.push({ role: 'assistant', content: data.content, imageUrl: null, mode: settings.mode })
-        setMessages(msgs)
-        setGridColsRow({ columns: data.columns, rows: data.rows })
-        if (data.rows && data.rows.length > 0) {
-          msgs.push({ role: 'assistant', content: "Please check the grid for the answer.", imageUrl: null, mode: settings.mode })
-          setMessages(msgs)
-        }
-      } if (settings.mode === Mode.Assistant) {
-        URL += '/api/assistants'
-        resp = await axios.post<IResponse[]>(URL, payload)
-        const data = resp.data
-        data.forEach((msg: IResponse) => {
-          msgs.push({ role: msg.role, content: msg.content, imageUrl: null, mode: (msg.role === "assistant" ? settings.mode : null) })
-        })
+        URL = URL_BASE + '/api/sqlbot'
+      } else if (settings.mode === Mode.Assistant) {
+        URL = URL_BASE + '/api/assistants'
+      } else if (settings.mode === Mode.MultiAgent) {
+        URL = URL_BASE + '/api/multiagent'
       }
+
+      if (URL === URL_BASE)
+        throw new Error('Invalid mode')
+
+      const resp = await axios.post<IResponse[]>(URL, payload)
+      const data = resp.data
+
+      data.forEach((msg: IResponse) => {
+        msgs.push({ role: msg.role, content: msg.content, imageUrl: null, mode: (msg.role === "assistant" ? settings.mode : null) })
+        if (msg.rows && msg.rows.length > 0) {
+          setGridColsRow({ columns: msg.columns, rows: msg.rows })
+          msgs.push({ role: 'assistant', content: 'please check the grid for the answers', imageUrl: null, mode: Mode.Assistant })
+        }
+      })
 
     }
     catch (error) {
@@ -190,6 +132,7 @@ function App() {
     }
   }
 
+  // JSX
   return (
     <>
       <header className="bg-slate-950 h-[40px] text-white p-2 flex items-center">

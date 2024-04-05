@@ -16,6 +16,7 @@ from openai.types.beta.threads.messages import MessageFile
 from openai.types import FileObject
 from PIL import Image
 from ArgumentException import ArgumentExceptionError
+from Models import ChatMessage
 
 
 class AssistantAgent:
@@ -181,10 +182,10 @@ class AssistantAgent:
                         #print(f"user: {name}:\n{item.text.value}\n")
                         #{'role':'assistant','user_name':user_name,'user_id':user_id,'content':content,'columns':[],'rows':[]}
                         #output_list.append({"role": "user", "content": item.text.value})
-                        output_list.append({'role':'user','user_name':'','user_id':'','content':item.text.value,'columns':[],'rows':[]})
+                        output_list.append(ChatMessage(role='user', user_name=name, user_id='', content=item.text.value, columns=[], rows=[]))                            
                     else:
                         #print(f"{message.role}:\n{item.text.value}\n")
-                        output_list.append({'role':'assistant','user_name':'','user_id':'','content':item.text.value,'columns':[],'rows':[]})
+                        output_list.append(ChatMessage(role='assistant', user_name='', user_id='', content=item.text.value, columns=[], rows=[]))                            
                     file_annotations = item.text.annotations
                     if file_annotations:
                         for annotation in file_annotations:
@@ -212,7 +213,9 @@ class AssistantAgent:
                         f.write(data_in_bytes)
 
                     url_content = f"/images/{file_name}"
-                    output_list.append({'role':'image','user_name':'','user_id':'','content':url_content,'columns':[],'rows':[]})
+                    
+                    output_list.append(ChatMessage(role='image', user_name='', user_id='', content=url_content, columns=[], rows=[]))
+
         return output_list
 
     def cleanup(self):

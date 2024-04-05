@@ -11,6 +11,9 @@ from AgentSettings import AgentSettings
 from AssistantAgent import AssistantAgent
 from GPTAgent import GPTAgent
 import repositories as rep
+from AgentRegistration import AgentRegistration
+from AgentProxy import AgentProxy
+from Models import ChatRequest
 
 app = FastAPI()
 
@@ -27,14 +30,6 @@ rep.export_top_customers_csv()
 logger.info("Creating top products csv file")
 rep.export_top_products_csv()
 
-#region: Models
-class ChatRequest(BaseModel):
-    user_name:str = 'user'
-    user_id: str = 'user'
-    input: str
-    max_tokens: int = 500
-    temperature: float = 0.3
-#endregion
 
 #region: CORS
 app.add_middleware(
@@ -127,9 +122,21 @@ def chatbot(request: ChatRequest):
     return assistant_agent.process_prompt(request.user_name,request.user_id,request.input)
 #endregion
 
+#region: multiagent
+reg1 = AgentRegistration(settings, client, "AdventureWorks Assistant", "You are a friendly asssitant that can help answer questions about customers, orders and products using the provided information.", assistant_agent)
+reg2 = AgentRegistration(settings, client, "AdventureWorks Assistant", "You are a friendly asssitant that can help answer questions about customers, orders and products using the provided information.", gpt_agent)
+proxy = AgentProxy(settings, client, [reg1, reg2])
+
+@app.post('/api/multiagent')
+def chatbot(request: ChatRequest):
+    return proxy.process_for_intent(request.user_name,request.user_id,request.input)
+#endregion
+
+
 #region: Static Files
 app.mount("/", StaticFiles(directory="wwwroot",html = True), name="static")
 #endregion
+
 
 #store.close()
 # @app.get("/items/{item_id}")

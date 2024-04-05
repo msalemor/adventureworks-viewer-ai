@@ -1,6 +1,8 @@
 import os
 import pymssql
 import dotenv
+import logging
+logger = logging.getLogger("repo")
 
 dotenv.load_dotenv()
 
@@ -81,6 +83,7 @@ SELECT TOP (1000) [CustomerID]
 
 
 def get_customers():
+    logger.info("Getting customers")
     cursor = conn.cursor()
     sql_cmd = """select * from SalesLT.vCustomers
 order by LastName,FirstName"""
@@ -114,6 +117,7 @@ def get_top_customers_count() -> int:
     return row['count']
 
 def get_top_customers_csv_as_text():
+    logger.info("Getting top customers as text")
     colsandrows =get_top_customers()    
     rows = colsandrows['rows']
     columns = colsandrows['columns']
@@ -150,6 +154,7 @@ def get_top_products():
     return {'columns':columns,'rows':rows}
 
 def get_top_products_csv_text():
+    logger.info("Getting top products as text")
     colsandrows = get_top_products()
     columns = colsandrows['columns']
     rows = colsandrows['rows']
@@ -199,9 +204,14 @@ def get_all_counts():
     }
     return results
 
+def create_directory(folder:str):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
 def export_top_customers_csv():
     rowsancols = get_top_customers()
     rows = rowsancols['rows']
+    create_directory('wwwroot/assets/data')
     with open('wwwroot/assets/data/top_customers.csv', 'w') as f:
         f.write("CustomerID,LastName,FirstName,EmailAddress,SalesPerson,City,StateProvince,CountryRegion,Total\n")
         for row in rows:
@@ -210,6 +220,7 @@ def export_top_customers_csv():
 def export_top_products_csv():
     rowsancols = get_top_products()
     rows = rowsancols['rows']
+    create_directory('wwwroot/assets/data')
     with open('wwwroot/assets/data/top_products.csv', 'w') as f:
         f.write("ProductId,category,model,description,TotalQty\n")
         for row in rows:

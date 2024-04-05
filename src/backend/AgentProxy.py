@@ -58,8 +58,8 @@ Output in ONE word."""
         except:
             return "Unknown"
 
-    def process_for_intent(self, user_name, user_id, prompt: str) -> str:
-        intent = self.__semantic_intent(prompt)
+    def process_for_intent(self, user_name, user_id, input: str,content:None) -> str:
+        intent = self.__semantic_intent(input)
         print(f'Intent: {intent}')
         if intent is None or intent == "OtherAgent" or intent == "Unknown":
             completion = self.client.chat.completions.create(
@@ -67,7 +67,7 @@ Output in ONE word."""
                 messages=[
                     {
                         "role": "user",
-                        "content": prompt,
+                        "content": input,
                     }
                 ]
             )
@@ -75,4 +75,4 @@ Output in ONE word."""
         else:
             for registered_agent in self.registered_agents:
                 if registered_agent.intent == intent:
-                    return registered_agent.agent.process_prompt(user_name, user_id, prompt)
+                    return registered_agent.agent.process_prompt(user_name, user_id, input)

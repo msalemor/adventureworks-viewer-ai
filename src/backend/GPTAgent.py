@@ -1,5 +1,6 @@
 from openai import AzureOpenAI
 from AgentSettings import AgentSettings
+from Models import ChatMessage
 import repositories as rep
 
 class GPTAgent:
@@ -14,7 +15,7 @@ class GPTAgent:
         self.settings : AgentSettings = settings
         self.client : AzureOpenAI = client
 
-    def process_prompt(self, user_name: str, user_id: str, prompt: str,max_tokens:int=500,temperature:float=0.3,context:str="") -> tuple:
+    def process_prompt(self, user_name: str, user_id: str, prompt: str,max_tokens:int=500,temperature:float=0.3,context:str="") -> list:
         completion = self.client.chat.completions.create(
                 model=self.settings.model_deployment,
                 messages=[
@@ -32,11 +33,15 @@ class GPTAgent:
             )
         
         #return ('assistant',user_name,user_id,str(completion.choices[0].message.content))
-        content = str(completion.choices[0].message.content)
-        return {'role':'assistant','user_name':user_name,'user_id':user_id,'content':content,'columns':[],'rows':[]}
+        content = str(completion.choices[0].message.content)        
+        output_messages = [
+            ChatMessage(role='user',user_name=user_name,user_id=user_id,content=prompt,columns=[],rows=[]),
+            ChatMessage(role='assistant',user_name=user_name,user_id=user_id,content=content,columns=[],rows=[])            
+        ]
+        return output_messages
     
 
-    def process_sql(self, user_name: str, user_id: str, prompt: str,max_tokens:int=500,temperature:float=0.3,schema:str=None) -> tuple:
+    def process_sql(self, user_name: str, user_id: str, prompt: str,max_tokens:int=500,temperature:float=0.3,schema:str=None) -> list:
         completion = self.client.chat.completions.create(
                 model=self.settings.model_deployment,
                 messages=[
@@ -63,5 +68,8 @@ class GPTAgent:
 
         columns = row_and_cols['columns']
         rows = row_and_cols['rows']
-        
-        return {'role':'assistant','user_name':user_name,'user_id':user_id,'content':content,'columns':columns,'rows':rows}
+        output_messages = [
+            ChatMessage(role='user',user_name=user_name,user_id=user_id,content=prompt,columns=[],rows=[]),
+            ChatMessage(role='assistant',user_name=user_name,user_id=user_id,content=content,columns=columns,rows=rows)
+        ]
+        return output_messages
