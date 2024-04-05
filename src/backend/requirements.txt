@@ -1,5 +1,5 @@
-openai
-fastapi
-uvicorn[standard]
-pymssql
-pillow
+openai==1.16.1
+fastapi==0.110.1
+uvicorn[standard]==0.29.0
+pymssql==2.2.11
+pillow==10.3.0

@@ -1,0 +1,4 @@
+__pychache__
+.dockerignore
+.env
+.gitignore

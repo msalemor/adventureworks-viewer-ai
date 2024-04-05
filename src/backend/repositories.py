@@ -85,8 +85,8 @@ def get_customers():
     sql_cmd = """select * from SalesLT.vCustomers
 order by LastName,FirstName"""
     cursor.execute(sql_cmd)
-    rows = cursor.fetchall()
     columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
+    rows = cursor.fetchall()
     return {'columns':columns,'rows':rows}    
 
 def get_customer_count() -> int:
@@ -94,7 +94,7 @@ def get_customer_count() -> int:
     sql_cmd = """select count(*) as count from SalesLT.vCustomers"""
     cursor.execute(sql_cmd)
     row = cursor.fetchone()
-    return {'count':row['count']}
+    return row['count']
 
 def get_top_customers():
     cursor = conn.cursor()
@@ -102,23 +102,24 @@ def get_top_customers():
 from [SalesLT].[vTopCustomers]
 order by total desc"""
     cursor.execute(sql_cmd)
-    rows = cursor.fetchall()    
     columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
+    rows = cursor.fetchall()        
     return {'columns':columns,'rows':rows}
 
-def get_top_customers_count():
+def get_top_customers_count() -> int:
     cursor = conn.cursor()
     sql_cmd = """select count(*) as count from [SalesLT].[vTopCustomers]"""
     cursor.execute(sql_cmd)
     row = cursor.fetchone()
-    return {'count':row['count']}
+    return row['count']
 
 def get_top_customers_csv_as_text():
-    colsandrows =get_top_customers()
-    columns = colsandrows['columns']
+    colsandrows =get_top_customers()    
     rows = colsandrows['rows']
+    columns = colsandrows['columns']
     text = "Customer data\n"
-    text += "CustomerID,LastName,FirstName,EmailAddress,SalesPerson,City,StateProvince,CountryRegion,Total\n"
+    #text += "CustomerID,LastName,FirstName,EmailAddress,SalesPerson,City,StateProvince,CountryRegion,Total\n"
+    text += ",".join([column['key'] for column in columns]) + "\n"
     for row in rows:
         text += f"{row['CustomerID']},{row['LastName']},{row['FirstName']},{row['EmailAddress']},{row['SalesPerson']},{row['City']},{row['StateProvince']},{row['CountryRegion']},{row['Total']}\n"
     return text
@@ -128,8 +129,8 @@ def get_products():
     sql_cmd = """select ProductId,Name,ProductModel,[Description] from [SalesLT].[vProductAndDescription]
 where culture='en' order by description"""
     cursor.execute(sql_cmd)
-    rows = cursor.fetchall()    
     columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
+    rows = cursor.fetchall()        
     return {'columns':columns,'rows':rows}   
 
 def get_products_count() -> int:
@@ -138,39 +139,39 @@ def get_products_count() -> int:
 where culture='en'"""
     cursor.execute(sql_cmd)
     row = cursor.fetchone()    
-    return {'count':row['count']}
+    return row['count']
 
 def get_top_products():
     cursor = conn.cursor()
     sql_cmd = """select * from [SalesLT].[vTopProductsSold] order by TotalQty desc"""
     cursor.execute(sql_cmd)
-    rows = cursor.fetchall()
     columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
+    rows = cursor.fetchall()    
     return {'columns':columns,'rows':rows}
 
 def get_top_products_csv_text():
     colsandrows = get_top_products()
     columns = colsandrows['columns']
     rows = colsandrows['rows']
-    text = "Product data\n"
-    text += "ProductId,category,model,description,TotalQty\n"
+    text = "Product data\n"    
+    text += ",".join([column['key'] for column in columns]) + "\n"
     for row in rows:
         text += f"{row['ProductId']},{row['category']},{row['model']},{row['description']},{row['TotalQty']}\n"
     return text
 
-def get_top_products_count():
+def get_top_products_count() -> int:
     cursor = conn.cursor()
     sql_cmd = """select count(*) as count from [SalesLT].[vTopProductsSold]"""
     cursor.execute(sql_cmd)
     row = cursor.fetchone()
-    return {'count':row['count']}
+    return row['count']
 
 def get_order_details():
     cursor = conn.cursor()
     sql_cmd = """select * from [SalesLT].[vOrderDetails] order by OrderQty desc"""
     cursor.execute(sql_cmd)
-    rows = cursor.fetchall()
     columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
+    rows = cursor.fetchall()    
     return {'columns':columns,'rows':rows}
 
 def get_order_details():
@@ -186,7 +187,7 @@ def get_order_details_count():
     sql_cmd = """select count(*) as count from [SalesLT].[vOrderDetails]"""
     cursor.execute(sql_cmd)
     row = cursor.fetchone()
-    return {'count':row['count']}
+    return row['count']
 
 def get_all_counts():
     results = {

@@ -14,9 +14,8 @@ import { GiCargoCrate } from "react-icons/gi"
 // import viteLogo from '/vite.svg'
 // import './App.css'
 
-const URL_BASE = 'http://127.0.0.1:8000'
-//const URL_BASE: string = window.location.protocol + "//" + window.location.host
-//const URL_BASE = ''
+//const URL_BASE = 'http://127.0.0.1:8000'
+const URL_BASE = ''
 
 enum Mode {
   NoAI = 'noai',
@@ -53,22 +52,19 @@ interface IGridColsRow {
 }
 
 const Counts = {
-  customers: { count: 0 },
-  topCustomers: { count: 0 },
-  products: { count: 0 },
-  topProducts: { count: 0 },
-  orderDetails: { count: 0 }
+  customers: 0,
+  topCustomers: 0,
+  products: 0,
+  topProducts: 0,
+  orderDetails: 0
 }
 
-interface ICount {
-  count: number
-}
 interface ICounts {
-  customers: ICount
-  topCustomers: ICount
-  products: ICount
-  topProducts: ICount
-  orderDetails: ICount
+  customers: number
+  topCustomers: number
+  products: number
+  topProducts: number
+  orderDetails: number
 }
 
 interface IMessage {
@@ -90,8 +86,11 @@ function App() {
   useEffect(() => {
     fetch(URL_BASE + '/api/counts')
       .then(resp => resp.json())
-      .then(data => {
-        setRecordCounts({ customers: data.customers, topCustomers: data.topCustomers, products: data.products, topProducts: data.topProducts, orderDetails: data.orderDetails })
+      .then((data: ICounts) => {
+        console.info(data)
+        //data.customers = data.customers ? data.customers : 0
+        //setRecordCounts({ customers: data.customers, topCustomers: data.topCustomers, products: data.products, topProducts: data.topProducts, orderDetails: data.orderDetails })
+        setRecordCounts(data)
       })
   }, [])
 
@@ -230,31 +229,31 @@ function App() {
         <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
           onClick={(evt) => getGridDate(evt, 'customers')}
         >
-          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.customers.count}</label>
+          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.customers}</label>
           <label className='font-semibold uppercase text-3xl'><BsPersonFill title='Customers' /></label>
         </div>
         <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
           onClick={(evt) => getGridDate(evt, 'sales')}
         >
-          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.topCustomers.count}</label>
+          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.topCustomers}</label>
           <label className='font-semibold uppercas text-3xl'><BsPersonFillUp title='Top Customers' /></label>
         </div>
         <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
           onClick={(evt) => getGridDate(evt, 'products')}
         >
-          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.products.count}</label>
+          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.products}</label>
           <label className='font-semibold uppercase text-3xl'><RiProductHuntLine title='Products' /></label>
         </div>
         <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
           onClick={(evt) => getGridDate(evt, 'sold')}
         >
-          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.topProducts.count}</label>
+          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.topProducts}</label>
           <label className='font-semibold uppercase text-3xl'><RiProductHuntFill title='Top Products' /></label>
         </div>
         <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer'
           onClick={(evt) => getGridDate(evt, 'orders')}
         >
-          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.orderDetails.count}</label>
+          <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.orderDetails}</label>
           <label className='font-semibold uppercase text-3xl'><GiCargoCrate title='Orders' /></label>
         </div>
       </section>

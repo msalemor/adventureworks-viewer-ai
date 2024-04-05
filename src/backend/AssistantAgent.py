@@ -213,16 +213,6 @@ class AssistantAgent:
 
                     url_content = f"/images/{file_name}"
                     output_list.append({'role':'image','user_name':'','user_id':'','content':url_content,'columns':[],'rows':[]})
-
-
-                    # image = Image.open(readable_buffer)
-                    # # Resize image to fit in terminal
-                    # width, height = image.size
-                    # image = image.resize(
-                    #     (width // 2, height // 2), Image.LANCZOS)
-                    # # Display image
-                    # image.show()
-
         return output_list
 
     def cleanup(self):

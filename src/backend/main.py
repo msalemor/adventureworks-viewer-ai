@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -12,12 +14,17 @@ import repositories as rep
 
 app = FastAPI()
 
+#logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 settings = AgentSettings()
 client = AzureOpenAI(azure_endpoint=settings.api_endpoint, api_key=settings.api_key, api_version=settings.api_version)
 gpt_agent = GPTAgent(settings, client)
 store = KCVStore('settings.db')
 
+logger.info("Creating top customers csv file")
 rep.export_top_customers_csv()
+logger.info("Creating top products csv file")
 rep.export_top_products_csv()
 
 #region: Models
@@ -42,53 +49,34 @@ app.add_middleware(
 #region: API
 @app.post("/api/reindex")
 def reindex():
-    rep.export_products_as_csv()
-    rep.export_customers_as_csv()
+    rep.export_top_customers_csv()
+    rep.export_top_products_csv()
+    logging.info("reindexed the csv files")
     return {"status": "reindex"}
+
+@app.get("/api/counts")
+def read_data():
+    return rep.get_all_counts()
 
 @app.get("/api/customers")
 def read_data():
     return rep.get_customers()
 
-@app.get("/api/customers/count")
-def read_data():
-    return {'count':rep.get_customer_count()}
-
 @app.get("/api/customers/top")
 def read_data():
     return rep.get_top_customers()
-
-@app.get("/api/customers/top/count")
-def read_data():
-    return rep.get_top_customers_count()
 
 @app.get("/api/products")
 def read_data():
     return rep.get_products()
 
-@app.get("/api/products/count")
-def read_data():
-    return rep.get_products_count()
-
 @app.get("/api/products/sold")
 def read_data():
     return rep.get_top_products()
 
-@app.get("/api/products/sold/count")
-def read_data():
-    return rep.get_top_products_count()
-
 @app.get("/api/orders")
 def read_data():
     return rep.get_order_details()
-
-@app.get("/api/orders/count")
-def read_data():
-    return rep.get_order_details_count()
-
-@app.get("/api/counts")
-def read_data():
-    return rep.get_all_counts()
 
 @app.get("/api/sales/count")
 def read_data():
@@ -126,7 +114,7 @@ val = store.get('assistant','id')
 if val:
     agent = client.beta.assistants.retrieve(val)
     assistant_agent = AssistantAgent(settings, client, "", "", "", tools_list=[], assistant=agent)
-    print(assistant_agent.assistant.id)
+    logger.info(f"Reloaded assistant {assistant_agent.assistant.id}")
 else:
     reset_assistant()
 
@@ -140,7 +128,7 @@ def chatbot(request: ChatRequest):
 #endregion
 
 #region: Static Files
-app.mount("/", StaticFiles(directory="wwwroot"), name="static")
+app.mount("/", StaticFiles(directory="wwwroot",html = True), name="static")
 #endregion
 
 #store.close()
