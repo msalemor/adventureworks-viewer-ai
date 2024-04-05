@@ -1,9 +1,9 @@
 export enum Mode {
-    NoAI = 'noai',
-    Chatbot = 'chatbot',
-    SqlBot = 'sqlbot',
-    Assistant = 'assitant',
-    MultiAgent = 'multiagent',
+    NoAI = 'No AI',
+    Chatbot = 'Chatbot',
+    SqlBot = 'Sqlbot',
+    Assistant = 'Assitants API',
+    MultiAgent = 'Multiagent',
 }
 
 export interface ISettings {

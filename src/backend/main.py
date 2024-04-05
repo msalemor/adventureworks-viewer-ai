@@ -123,8 +123,9 @@ def chatbot(request: ChatRequest):
 #endregion
 
 #region: multiagent
-reg1 = AgentRegistration(settings, client, "AdventureWorks Assistant", "You are a friendly asssitant that can help answer questions about customers, orders and products using the provided information.", assistant_agent)
-reg2 = AgentRegistration(settings, client, "AdventureWorks Assistant", "You are a friendly asssitant that can help answer questions about customers, orders and products using the provided information.", gpt_agent)
+reg1 = AgentRegistration(settings, client, "SalesIntent", "A bot that can answer questions related to customers, orders and products using the provided information.", assistant_agent)
+reg2 = AgentRegistration(settings, client, "SqlIntent", "A bot that can generate SQL statements.", gpt_agent)
+reg2 = AgentRegistration(settings, client, "CityIntent", "A bot that can answer questions related to city information and weather.", gpt_agent)
 proxy = AgentProxy(settings, client, [reg1, reg2])
 
 @app.post('/api/multiagent')
@@ -136,9 +137,3 @@ def chatbot(request: ChatRequest):
 #region: Static Files
 app.mount("/", StaticFiles(directory="wwwroot",html = True), name="static")
 #endregion
-
-
-#store.close()
-# @app.get("/items/{item_id}")
-# def read_item(item_id: int, q: Union[str, None] = None):
-#     return {"item_id": item_id, "q": q}

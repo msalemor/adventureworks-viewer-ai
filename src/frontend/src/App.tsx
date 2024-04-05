@@ -12,7 +12,7 @@ import { RiProductHuntFill } from "react-icons/ri"
 import { GiCargoCrate } from "react-icons/gi"
 import { ICounts, IGridColsRow, IMessage, IResponse, ISettings, Mode } from './intefaces';
 
-const URL_BASE = 'http://127.0.0.1:8000'
+const URL_BASE = import.meta.env.VITE_BASE_URL
 //const URL_BASE = ''
 
 const Settings = {
@@ -118,7 +118,7 @@ function App() {
         msgs.push({ role: msg.role, content: msg.content, imageUrl: null, mode: (msg.role === "assistant" ? settings.mode : null) })
         if (msg.rows && msg.rows.length > 0) {
           setGridColsRow({ columns: msg.columns, rows: msg.rows })
-          msgs.push({ role: 'assistant', content: 'please check the grid for the answers', imageUrl: null, mode: Mode.Assistant })
+          msgs.push({ role: 'assistant', content: 'please check the grid for the answers', imageUrl: null, mode: Mode.SqlBot })
         }
       })
 
@@ -247,8 +247,12 @@ function App() {
         </aside>
       </div>
       <footer className={"text-white flex h-[35px] items-center space-x-2 " + (processing ? 'bg-red-600' : 'bg-slate-900')}>
-        <label className='bg-green-700 p-1'>Online</label>
-        <label className={'' + (processing ? '' : 'invisible')}>Proccessing ...</label>
+        <div className='bg-green-700 font-semibold h-full flex items-center'>Online</div>
+        {/* <label className={'' + (processing ? '' : 'invisible')}>Proccessing ...</label> */}
+        <div className='h-full flex items-center'>Mode: {settings.mode}</div>
+        {/* {settings.mode === Mode.Assistant && <div className='h-full flex items-center space-x-2'>
+          <div>ID:</div>
+          <div className='bg-slate-400 text-black p-1'>123abc</div></div>} */}
       </footer>
     </>
   )
