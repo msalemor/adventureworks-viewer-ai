@@ -12,4 +12,5 @@ COPY wwwroot /app/wwwroot
 RUN mkdir /app/wwwroot/assets/data
 
 EXPOSE 80
+ENV OPENAPI_URL=
 CMD [ "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--workers", "3", "--log-level", "info"]

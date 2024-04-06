@@ -170,11 +170,11 @@ const App = () => {
                 <h1 className="text-xl font-bold">AdventureWorks Viewer</h1>
             </header>
 
-            <div className="flex h-[calc(100vh-40px-36px)]">
+            <div className="flex h-[calc(100vh-40px-26px)]">
                 <main className={'bg-blue-100 ' + (settings.mode !== Mode.NoAI ? 'w-2/3' : 'w-full')}>
                     {/* select AI mode */}
-                    <nav className="bg-slate-950 text-white flex items-center h-[40px] space-x-3">
-                        <label className="font-semibold uppercase">Mode</label>
+                    <nav className="bg-slate-950 text-white flex items-center h-[40px] space-x-3 px-2">
+                        <label className="font-semibold">Select mode:</label>
 
                         <input type="radio" name="opt1" id='simple'
                             checked={settings.mode === Mode.NoAI}
@@ -243,11 +243,11 @@ const App = () => {
                         <DataGrid
                             sortColumns={sortColumns}
                             onSortColumnsChange={setSortColumns}
-                            className='h-[calc(100vh-75px-35px-105px)]' columns={gridColsRow.columns} rows={gridColsRow.rows} />
+                            className='h-[calc(100vh-75px-35px-96px)]' columns={gridColsRow.columns} rows={gridColsRow.rows} />
                     </section>
                 </main>
                 <aside className={settings.mode !== Mode.NoAI ? 'w-1/3 flex flex-col' : 'hidden'}>
-                    <div className="bg-slate-950 text-white h-[calc(100vh-40px-36px-150px)] p-2 space-y-2 overflow-auto">
+                    <div className="bg-slate-950 text-white h-[calc(100vh-40px-36px-140px)] p-2 space-y-2 overflow-auto">
                         {messages.map((msg, idx) => <>
                             {msg.role === 'user' && <div key={idx} className='bg-slate-700 p-2 rounded-lg w-[95%] ml-auto'>
                                 {msg.content}
@@ -284,17 +284,19 @@ const App = () => {
                             <button className='outline-none text-2xl px-1 text-red-600' title='Clear Messages'
                                 onClick={() => setMessages([])}
                             ><MdOutlineClear /></button>
-                            <button className='outline-none text-2xl px-1 text-slate-500' title={getModeHelp()}
+                            <button className='outline-none text-2xl px-1 text-slate-400' title={getModeHelp()}
                                 onClick={() => setMessages([])}
                             ><IoMdInformationCircleOutline /></button>
                         </div>
                     </div>
                 </aside>
             </div>
-            <footer className={"text-white flex h-[36px] items-center space-x-2 " + (processing ? 'bg-red-600' : 'bg-slate-900')}>
-                <div className='bg-green-700 font-semibold h-full flex items-center'>Online</div>
+            <footer className={"text-white text-sm flex h-[26px] items-center space-x-2 " + (processing ? 'bg-red-600' : 'bg-slate-900')}>
+                <div className='bg-green-700 font-semibold h-full flex items-center px-1'>Online</div>
                 {/* <label className={'' + (processing ? '' : 'invisible')}>Proccessing ...</label> */}
-                <div className='h-full flex items-center'>Mode: {settings.mode}</div>
+                <div className='h-full flex items-center px-1'>Mode:</div>
+                <div className='h-full flex items-center px-1 bg-slate-300 text-black'>{settings.mode}</div>
+
                 {/* {settings.mode === Mode.Assistant && <div className='h-full flex items-center space-x-2'>
           <div>ID:</div>
           <div className='bg-slate-400 text-black p-1'>123abc</div></div>} */}

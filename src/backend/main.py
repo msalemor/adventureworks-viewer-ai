@@ -1,4 +1,5 @@
 import logging
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,7 +17,12 @@ from AgentRegistration import AgentRegistration
 from AgentProxy import AgentProxy
 from Models import ChatRequest
 
-app = FastAPI()
+
+import dotenv
+dotenv.load_dotenv()
+
+openapi_url = os.getenv("OPENAPI_URL")
+app = FastAPI(openapi_url=openapi_url, title="AdventureWorks API", version="0.1.0")
 
 #logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
