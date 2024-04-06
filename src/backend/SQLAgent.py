@@ -3,7 +3,7 @@ from AgentSettings import AgentSettings
 from Models import ChatMessage
 import repositories as rep
 
-class GPTAgent:
+class SQLAgent:
     def __init__(self, settings = None, client = None):
 
         if settings is None:
@@ -16,32 +16,38 @@ class GPTAgent:
         self.client : AzureOpenAI = client
         self.get_context_delegate = None
 
-    def process(self, user_name: str, user_id: str, prompt: str,max_tokens:int=500,temperature:float=0.3,context:str="") -> list:
-        
+    def process(self, user_name: str, user_id: str, prompt: str,max_tokens:int=500,temperature:float=0.3,context:str=None) -> list:
         if self.get_context_delegate:
             context = self.get_context_delegate()
-
+        
         completion = self.client.chat.completions.create(
                 model=self.settings.model_deployment,
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an agent that can help answer questions about customers, products, and customer orders." ,
+                        "content": "You are an agent that can help generate sql statements based on the schema provided. Here is the schema:\n" + context,
                     },
                     {
                         "role": "user",
-                        "content": prompt +"Text: \"\"\"" + context + "\"\"\"",
+                        "content": f"What is the SQL statement to:\n{prompt}\nOutput the SQL statement ONLY."
                     }
                 ],
                 max_tokens=max_tokens,
                 temperature=temperature
             )
         
-        #return ('assistant',user_name,user_id,str(completion.choices[0].message.content))
-        result = str(completion.choices[0].message.content)        
+        results = str(completion.choices[0].message.content)
+        results = results.replace("```","")
+        results = results.replace("\n"," ")
+        results = results.replace("sql","") 
+        results = results.replace(";","")
+        row_and_cols= rep.sql_executor(results)
+
+        columns = row_and_cols['columns']
+        rows = row_and_cols['rows']
         output_messages = [
             ChatMessage(role='user',user_name=user_name,user_id=user_id,content=prompt,columns=[],rows=[]),
-            ChatMessage(role='assistant',user_name=user_name,user_id=user_id,content=result,columns=[],rows=[])            
+            ChatMessage(role='assistant',user_name=user_name,user_id=user_id,content=results,columns=columns,rows=rows)
         ]
+
         return output_messages
-    

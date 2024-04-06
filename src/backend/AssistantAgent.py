@@ -83,14 +83,16 @@ class AssistantAgent:
                 model=self.settings.model_deployment
             )
 
-    def delete_thread(self,thread):
+    def delete_thread(self,thread_id:str):
         if not self.keep_state:
-            self.client.beta.threads.delete(thread.id)
-            logging.info("Deleted thread: ", thread.id)
+            try:
+                logging.info(f"Deleted thread: {thread_id}")
+                self.client.beta.threads.delete(thread_id)
+            except:
+                pass            
 
 
-
-    def process_prompt(self, user_name: str, user_id: str, prompt: str) -> list:
+    def process(self, user_name: str, user_id: str, prompt: str) -> list:
 
         # if keep_state:
         #     thread_id = check_if_thread_exists(user_id)
@@ -128,22 +130,22 @@ class AssistantAgent:
                 messages = self.client.beta.threads.messages.list(
                     thread_id=thread.id)
                 items= self.print_messages(user_name, messages)                
-                self.delete_thread(thread)
+                self.delete_thread(thread.id)
                 return items
             if run.status == "failed":
                 messages = self.client.beta.threads.messages.list(
                     thread_id=thread.id)
                 items = self.print_messages(user_name, messages)
-                self.delete_thread(thread)
+                self.delete_thread(thread.id)
                 return items
                 # Handle failed                
             if run.status == "expired":
                 # Handle expired
-                self.delete_thread(thread)
+                self.delete_thread(thread.id)
                 return
             if run.status == "cancelled":
                 # Handle cancelled
-                self.delete_thread(thread)
+                self.delete_thread(thread.id)
                 return
             if run.status == "requires_action":
                 if self.fn_calling_delegate:

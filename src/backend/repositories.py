@@ -79,6 +79,12 @@ SELECT TOP (1000) [CustomerID]
       ,[StateProvince]
       ,[CountryRegion]
   FROM [SalesLT].[vTopSales]
+
+Sample queries:
+Q: What customers are in the United States?
+A: SELECT * FROM [SalesLT].[vCustomers] WHERE [CountryRegion] = 'United States'
+Q: In what countries are there customers who have bought products?
+A: SELECT DISTINCT vCustomers.CountryRegion FROM SalesLT.vCustomers INNER JOIN SalesLT.vOrderDetails ON vCustomers.CustomerID = vOrderDetails.CustomerID
 """
 
 

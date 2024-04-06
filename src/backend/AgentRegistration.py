@@ -4,10 +4,19 @@ from ArgumentException import ArgumentExceptionError
 from AssistantAgent import AssistantAgent
 
 
+# This is a really an interface
+class BaseAgent:
+    def __init__(self):
+        self.settings : AgentSettings
+        self.client : AzureOpenAI
+        self.get_context_delegate
+    def process(self, user_name: str, user_id: str, prompt: str,max_tokens:int=500,temperature:float=0.3,context:str=None) -> list:
+        pass
+
 class AgentRegistration:
     """This function is to hold the agent registration information"""
 
-    def __init__(self, settings=None, client=None, intent: str = None, intent_desc: str = None, agent: AssistantAgent = None):
+    def __init__(self, settings=None, client=None, intent: str = None, intent_desc: str = None, agent: BaseAgent = None):
         self.settings = settings
         self.client = client
         self.agent = agent

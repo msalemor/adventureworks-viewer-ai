@@ -2,6 +2,7 @@ from openai import AzureOpenAI
 from AgentRegistration import AgentRegistration
 from AgentSettings import AgentSettings
 from ArgumentException import ArgumentExceptionError
+from Models import ChatMessage
 
 
 class AgentProxy:
@@ -33,7 +34,7 @@ OtherAgent: any other question
 user:
 <QUESTION>
 
-Output in ONE word."""
+Output in intent ONLY."""
 
         intents = ""
         for reg_agent in self.registered_agents:
@@ -58,7 +59,7 @@ Output in ONE word."""
         except:
             return "Unknown"
 
-    def process_for_intent(self, user_name, user_id, input: str,content:None) -> str:
+    def process(self, user_name, user_id, input: str) -> list:
         intent = self.__semantic_intent(input)
         print(f'Intent: {intent}')
         if intent is None or intent == "OtherAgent" or intent == "Unknown":
@@ -71,8 +72,13 @@ Output in ONE word."""
                     }
                 ]
             )
-            print(completion.choices[0].message.content)
+            result = str(completion.choices[0].message.content)        
+            output_messages = [
+                ChatMessage(role='user',user_name=user_name,user_id=user_id,content=input,columns=[],rows=[]),
+                ChatMessage(role='assistant',user_name=user_name,user_id=user_id,content=result,columns=[],rows=[])            
+            ]
+            return output_messages
         else:
             for registered_agent in self.registered_agents:
-                if registered_agent.intent == intent:
-                    return registered_agent.agent.process_prompt(user_name, user_id, input)
+                if registered_agent.intent == intent:                    
+                    return registered_agent.agent.process(user_name, user_id, input)

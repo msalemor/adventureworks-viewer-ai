@@ -10,6 +10,7 @@ from kcvstore import KCVStore
 from AgentSettings import AgentSettings
 from AssistantAgent import AssistantAgent
 from GPTAgent import GPTAgent
+from SQLAgent import SQLAgent
 import repositories as rep
 from AgentRegistration import AgentRegistration
 from AgentProxy import AgentProxy
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 settings = AgentSettings()
 client = AzureOpenAI(azure_endpoint=settings.api_endpoint, api_key=settings.api_key, api_version=settings.api_version)
 gpt_agent = GPTAgent(settings, client)
+sql_agent = SQLAgent(settings, client)
 store = KCVStore('settings.db')
 
 logger.info("Creating top customers csv file")
@@ -79,11 +81,11 @@ def read_data():
 
 @app.post('/api/chatbot')
 def chatbot(request: ChatRequest):
-    return gpt_agent.process_prompt('user','user',request.input,context=rep.get_top_customers_csv_as_text()+rep.get_top_products_csv_text())
+    return gpt_agent.process('user','user',request.input,context=rep.get_top_customers_csv_as_text()+rep.get_top_products_csv_text())
 
 @app.post('/api/sqlbot')
-def chatbot(request: ChatRequest):
-    return gpt_agent.process_sql('user','user',request.input, schema=rep.sql_schema)
+def sqlbot(request: ChatRequest):
+    return sql_agent.process('user','user',request.input, context=rep.sql_schema)
 #endregion
 
 #region: Assistants
@@ -123,14 +125,21 @@ def chatbot(request: ChatRequest):
 #endregion
 
 #region: multiagent
-reg1 = AgentRegistration(settings, client, "SalesIntent", "A bot that can answer questions related to customers, orders and products using the provided information.", assistant_agent)
-reg2 = AgentRegistration(settings, client, "SqlIntent", "A bot that can generate SQL statements.", gpt_agent)
-reg2 = AgentRegistration(settings, client, "CityIntent", "A bot that can answer questions related to city information and weather.", gpt_agent)
-proxy = AgentProxy(settings, client, [reg1, reg2])
+bot_agent = GPTAgent(settings, client)
+bot_agent.get_context_delegate = lambda: rep.get_top_customers_csv_as_text() + rep.get_top_products_csv_text()
+
+sql_agent = SQLAgent(settings, client)
+sql_agent.get_context_delegate = lambda: rep.sql_schema
+
+bot_agent_registration = AgentRegistration(settings, client, "SalesIntent", "Answer questions related to customers, orders and products.", bot_agent)
+sql_bot_registration = AgentRegistration(settings, client, "SqlIntent", "Generate and process SQL statement.", sql_agent)
+assistant_registration = AgentRegistration(settings, client, "AssistantIntent", "Generate chart, bars, and graphs related customes, orders, and products.", assistant_agent)
+
+proxy = AgentProxy(settings, client, [bot_agent_registration, sql_bot_registration,assistant_registration])
 
 @app.post('/api/multiagent')
 def chatbot(request: ChatRequest):
-    return proxy.process_for_intent(request.user_name,request.user_id,request.input)
+    return proxy.process(request.user_name,request.user_id,request.input)
 #endregion
 
 
