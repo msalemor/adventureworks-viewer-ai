@@ -15,30 +15,29 @@ import database as rep
 from AgentRegistration import AgentRegistration
 from AgentProxy import AgentProxy
 from Models import ChatRequest
-
 import dotenv
-dotenv.load_dotenv()
 
+#region: Logging settings
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+#endregion
+
+#region: Load App settings
+dotenv.load_dotenv()
 DEV_MODE = os.getenv("DEV_MODE") or "development"
 OPENAPI_URL = os.getenv("OPENAPI_URL")
 CORS_ORIGINS = os.getenv("CORS_ORIGINS") or "*"
+#endregion
 
-app = FastAPI(openapi_url=OPENAPI_URL, title="AdventureWorks API", version="0.1.0")
-
-#logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+#region: Initialize the agents and the store
 settings = AgentSettings()
 client = AzureOpenAI(azure_endpoint=settings.api_endpoint, api_key=settings.api_key, api_version=settings.api_version)
 gpt_agent = GPTAgent(settings, client)
 sql_agent = SQLAgent(settings, client)
 store = KCVStore('settings.db')
+#endregion
 
-logger.info("Creating top customers csv file")
-rep.export_top_customers_csv()
-logger.info("Creating top products csv file")
-rep.export_top_products_csv()
-
+app = FastAPI(openapi_url=OPENAPI_URL, title="AdventureWorks API", version="0.1.0")
 
 #region: CORS
 app.add_middleware(
@@ -52,10 +51,11 @@ app.add_middleware(
 
 #region: API
 @app.post("/api/reindex")
-def reindex():
+def reindex():    
     rep.export_top_customers_csv()
+    logger.info("reindexing the top customers csv file")    
     rep.export_top_products_csv()
-    logging.info("reindexed the csv files")
+    logger.info("reindexed the top products csv files")
     return {"status": "reindex"}
 
 @app.get("/api/counts")
@@ -161,8 +161,15 @@ def chatbot(request: ChatRequest):
     return proxy.process(request.user_name,request.user_id,request.input)
 #endregion
 
-
-
 #region: Static Files
-app.mount("/", StaticFiles(directory="wwwroot",html = True), name="static")
+# Set NO_STATIC_MODE= to anything to disable serving static files
+serve_files = os.getenv("SERVE_FILES") or "Yes"
+if serve_files=="Yes":
+    app.mount("/", StaticFiles(directory="wwwroot",html = True), name="static")
+#endregion
+
+#region: Reindex the content files
+reindex_content_files = os.getenv("REINDEX_FILES") or "Yes"
+if reindex_content_files=="Yes":
+    reindex()
 #endregion
