@@ -4,7 +4,6 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 
 from openai import AzureOpenAI
 from kcvstore import KCVStore
@@ -12,17 +11,19 @@ from AgentSettings import AgentSettings
 from AssistantAgent import AssistantAgent
 from GPTAgent import GPTAgent
 from SQLAgent import SQLAgent
-import repositories as rep
+import database as rep
 from AgentRegistration import AgentRegistration
 from AgentProxy import AgentProxy
 from Models import ChatRequest
 
-
 import dotenv
 dotenv.load_dotenv()
 
-openapi_url = os.getenv("OPENAPI_URL")
-app = FastAPI(openapi_url=openapi_url, title="AdventureWorks API", version="0.1.0")
+DEV_MODE = os.getenv("DEV_MODE") or "development"
+OPENAPI_URL = os.getenv("OPENAPI_URL")
+CORS_ORIGINS = os.getenv("CORS_ORIGINS") or "*"
+
+app = FastAPI(openapi_url=OPENAPI_URL, title="AdventureWorks API", version="0.1.0")
 
 #logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ rep.export_top_products_csv()
 #region: CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[CORS_ORIGINS],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -95,11 +96,12 @@ def sqlbot(request: ChatRequest):
 #endregion
 
 #region: Assistants
-assistant_agent : AssistantAgent= None
-def reset_assistant():
+def reset_assistant() -> AssistantAgent:
     
     store.delete('assistant','id')
     try:
+        agent = client.beta.assistants.retrieve(val)
+        assistant_agent = AssistantAgent(settings, client, "", "", "", tools_list=[], assistant=agent)
         assistant_agent.cleanup()
     except:
         pass
@@ -109,25 +111,36 @@ def reset_assistant():
                                     "You are a friendly asssitant that can help answer questions about customers, orders and products using the provided information.",
                                     "wwwroot/assets/data/",
                                     [{"type": "code_interpreter"}])
+    
     store.set('assistant','id',assistant_agent.assistant.id)
 
-    return {'status':f'assistant created {assistant_agent.assistant.id}'}
+    #return {'status':f'assistant created {assistant_agent.assistant.id}'}
+    return assistant_agent
 
-val = store.get('assistant','id')
-if val:
-    agent = client.beta.assistants.retrieve(val)
-    assistant_agent = AssistantAgent(settings, client, "", "", "", tools_list=[], assistant=agent)
-    logger.info(f"Reloaded assistant {assistant_agent.assistant.id}")
-else:
-    reset_assistant()
+def get_assistant_agent()->AssistantAgent:
+    val = store.get('assistant','id')
+    if val:
+        agent = client.beta.assistants.retrieve(val)
+        assistant_agent = AssistantAgent(settings, client, "", "", "", tools_list=[], assistant=agent)
+        logger.info(f"Reloaded assistant {assistant_agent.assistant.id}")
+    else:
+        # send a bad request
+        assistant_agent = reset_assistant()
+    return assistant_agent
 
-@app.delete('/api/assistant')
+@app.delete('/api/assistant/reset')
 def delete_state():    
-    return reset_assistant()
+    reset_assistant()
+    return {"status":"assistant reset"}
 
 @app.post('/api/assistants')
-def chatbot(request: ChatRequest):
-    return assistant_agent.process_prompt(request.user_name,request.user_id,request.input)
+def chatbot(request: ChatRequest):    
+    return get_assistant_agent().process(request.user_name,request.user_id,request.input)
+
+@app.get("/api/assistant/id")
+def get_assistant_id():
+    val = store.get('assistant','id')
+    return {"assistant_id":val or "None"}
 #endregion
 
 #region: multiagent
@@ -139,7 +152,7 @@ sql_agent.get_context_delegate = lambda: rep.sql_schema
 
 bot_agent_registration = AgentRegistration(settings, client, "SalesIntent", "Answer questions related to customers, orders and products.", bot_agent)
 sql_bot_registration = AgentRegistration(settings, client, "SqlIntent", "Generate and process SQL statement.", sql_agent)
-assistant_registration = AgentRegistration(settings, client, "AssistantIntent", "Generate chart, bars, and graphs related customes, orders, and products.", assistant_agent)
+assistant_registration = AgentRegistration(settings, client, "AssistantIntent", "Generate chart, bars, and graphs related customes, orders, and products.", get_assistant_agent())
 
 proxy = AgentProxy(settings, client, [bot_agent_registration, sql_bot_registration,assistant_registration])
 
@@ -147,6 +160,7 @@ proxy = AgentProxy(settings, client, [bot_agent_registration, sql_bot_registrati
 def chatbot(request: ChatRequest):
     return proxy.process(request.user_name,request.user_id,request.input)
 #endregion
+
 
 
 #region: Static Files

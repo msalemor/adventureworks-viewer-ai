@@ -3,7 +3,7 @@ import sqlite3
 class KCVStore:
     def __init__(self, dbpath):
         self.dbpath = dbpath
-        self.conn = sqlite3.connect(self.dbpath)
+        self.conn = sqlite3.connect(self.dbpath, check_same_thread=False)
         self.cursor = self.conn.cursor()
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS kcvstore (

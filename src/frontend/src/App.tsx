@@ -39,6 +39,7 @@ const App = () => {
     const [recordCounts, setRecordCounts] = useState<ICounts>(Counts)
     const [input, setInput] = useState<string>('')
     const [messages, setMessages] = useState<IMessage[]>([])
+    const [assistantId, setAssistantId] = useState<string>('')
 
     // effetcs
     useEffect(() => {
@@ -96,6 +97,21 @@ const App = () => {
         }
     }
 
+    const getAssistantId = async () => {
+        try {
+            const resp = await axios.get<{ assistant_id: string }>(URL_BASE + '/api/assistant/id')
+            setAssistantId(resp.data.assistant_id)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    useEffect(() => {
+        (async () => {
+            await getAssistantId()
+        })()
+    }, [settings])
+
     const Process = async () => {
         if (processing) return
         setProcessing(true)
@@ -131,7 +147,6 @@ const App = () => {
                             msgs.push({ role: 'assistant', content: 'Please check the grid for the answer', imageUrl: null, mode: Mode.SqlBot })
                         } else {
                             setGridColsRow({ columns: [], rows: [] })
-                            //msgs.push({ role: 'assistant', content: 'No data found.', imageUrl: null, mode: settings.mode })
                         }
 
                     }
@@ -174,7 +189,7 @@ const App = () => {
                 <main className={'bg-blue-100 ' + (settings.mode !== Mode.NoAI ? 'w-2/3' : 'w-full')}>
                     {/* select AI mode */}
                     <nav className="bg-slate-950 text-white flex items-center h-[40px] space-x-3 px-2">
-                        <label className="font-semibold">Select mode:</label>
+                        <label className="font-semibold">Mode:</label>
 
                         <input type="radio" name="opt1" id='simple'
                             checked={settings.mode === Mode.NoAI}
@@ -278,29 +293,30 @@ const App = () => {
                             onChange={(evt) => setInput(evt.target.value)}
                         ></textarea>
                         <div className='flex flex-col justify-center space-y-2'>
-                            <button className='outline-none text-2xl px-1 text-blue-600' title='Process'
+                            <button className='outline-none text-3xl px-1 text-blue-600' title='Process'
                                 onClick={Process}
                             ><RiSendPlane2Fill /></button>
-                            <button className='outline-none text-2xl px-1 text-red-600' title='Clear Messages'
+                            <button className='outline-none text-3xl px-1 text-red-600' title='Clear Messages'
                                 onClick={() => setMessages([])}
                             ><MdOutlineClear /></button>
-                            <button className='outline-none text-2xl px-1 text-slate-400' title={getModeHelp()}
+                            <button className='outline-none text-3xl px-1 text-slate-300' title={getModeHelp()}
                                 onClick={() => setMessages([])}
                             ><IoMdInformationCircleOutline /></button>
                         </div>
                     </div>
                 </aside>
             </div>
-            <footer className={"text-white text-sm flex h-[26px] items-center space-x-2 " + (processing ? 'bg-red-600' : 'bg-slate-900')}>
-                <div className='bg-green-700 font-semibold h-full flex items-center px-1'>Online</div>
-                {/* <label className={'' + (processing ? '' : 'invisible')}>Proccessing ...</label> */}
-                <div className='h-full flex items-center px-1'>Mode:</div>
-                <div className='h-full flex items-center px-1 bg-slate-300 text-black'>{settings.mode}</div>
+            <footer className={"text-white text-sm flex h-[26px] items-center " + (processing ? 'bg-red-600' : 'bg-slate-900')}>
+                <div className='bg-green-700 font-semibold h-full flex items-center px-2 mr-1'>Online</div>
+                <div className='h-full flex items-center px-2 mr-1'>Mode:</div>
+                <div className='h-full flex items-center px-1 bg-slate-300 text-black mr-1'>{settings.mode}</div>
+                {(settings.mode === Mode.Assistant || settings.mode === Mode.MultiAgent) && <div className='h-full flex items-center px-1 bg-slate-300 text-black'>
+                    <label className="font-semibold mr-1">ID:</label>
+                    <label>{assistantId}</label></div>}
 
-                {/* {settings.mode === Mode.Assistant && <div className='h-full flex items-center space-x-2'>
-          <div>ID:</div>
-          <div className='bg-slate-400 text-black p-1'>123abc</div></div>} */}
-            </footer>
+                {/* TODO: Add the assistant ID */}
+                {/* TODO: Add butto to reset assistant ID */}
+            </footer >
         </>
     )
 }

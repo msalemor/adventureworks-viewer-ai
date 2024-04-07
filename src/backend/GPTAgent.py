@@ -1,7 +1,7 @@
 from openai import AzureOpenAI
 from AgentSettings import AgentSettings
 from Models import ChatMessage
-import repositories as rep
+import database as rep
 
 class GPTAgent:
     def __init__(self, settings = None, client = None):
