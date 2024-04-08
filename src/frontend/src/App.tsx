@@ -41,6 +41,7 @@ const App = () => {
     const [messages, setMessages] = useState<IMessage[]>([])
     const [assistantId, setAssistantId] = useState<string>('')
     const [openinfoarea, setOpeninfoarea] = useState(false)
+    const [systemStatus, setSystemStatus] = useState({ status: 'Online', total: 2 })
 
     // effetcs
     useEffect(() => {
@@ -54,6 +55,26 @@ const App = () => {
                 console.error(error)
             }
         })()
+    }, [])
+
+    const fetchStatus = async () => {
+        try {
+            const response = await axios.get<{ status: string, total: number }>(URL_BASE + '/api/status');
+            console.info(response.data)
+            setSystemStatus(response.data)
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+        }
+    };
+
+    const refreshTime = 5000
+    useEffect(() => {
+        // Set up an interval to fetch data at regular intervals
+        const comInterval = setInterval(fetchStatus, refreshTime);
+
+        // Clean up the interval when the component unmounts
+        return () => clearInterval(comInterval);
     }, [])
 
     // supporting functions
@@ -392,7 +413,7 @@ const App = () => {
                 </aside>
             </div>
             <footer className={"text-white text-sm flex h-[26px] items-center " + (processing ? 'bg-red-600' : 'bg-slate-900')}>
-                <div className='bg-green-700 font-semibold h-full flex items-center px-2 mr-1'>Online</div>
+                <div className={'font-semibold h-full flex items-center px-2 mr-1 ' + (systemStatus.total === 2 ? 'bg-green-700' : 'bg-orange-600')}>{systemStatus.status}</div>
                 <div className='h-full flex items-center px-2 mr-1'>Mode:</div>
                 <div className='h-full flex items-center px-1 bg-slate-300 text-black mr-1'>{settings.mode}</div>
                 {(settings.mode === Mode.Assistant || settings.mode === Mode.MultiAgent) && <div className='h-full flex items-center px-1 bg-slate-300 text-black'>

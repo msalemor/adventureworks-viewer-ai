@@ -141,6 +141,26 @@ def chatbot(request: ChatRequest):
 def get_assistant_id():
     val = store.get('assistant','id')
     return {"assistant_id":val or "None"}
+
+@app.get("/api/status")
+def get_app_status():
+    total = rep.get_db_status() +   rep.get_files_status()
+    
+    system_down = ""    
+    if rep.get_db_status() == 0:
+        system_down += "Db"
+    if rep.get_files_status() == 0:
+        system_down += "Files"
+    
+    if total ==2:
+        return {"status":"Online","total":total}
+    elif total ==1:
+        return {"status":f"{system_down} degrated","total":total}
+    elif total ==0:
+        return {"status":"Offline","total":total}
+    else:
+        return {"status":"Unknown","total":total}
+
 #endregion
 
 #region: multiagent

@@ -14,7 +14,6 @@ from openai.types.beta.threads.text_content_block import TextContentBlock
 from openai.types.beta.threads.image_file_content_block import ImageFileContentBlock
 from openai.types.beta.threads.messages import MessageFile
 from openai.types import FileObject
-from PIL import Image
 from ArgumentException import ArgumentExceptionError
 from Models import ChatMessage
 

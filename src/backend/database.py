@@ -232,6 +232,24 @@ def export_top_products_csv():
         for row in rows:
             f.write(f"{row['ProductId']},{row['category']},{row['model']},{row['description']},{row['TotalQty']}\n")
 
+def get_db_status() -> int:
+    try:
+        # try to execute the statement
+        cursor = conn.cursor()    
+        cursor.execute("select 1 as status")
+        row = cursor.fetchone()
+        return 1
+    except Exception as e:
+        logging.warning(f"Error connecting to database: {str(e)}")
+        return 0
+    
+def get_files_status() -> int:
+    status = os.path.exists('wwwroot/assets/data/top_customers.csv') and os.path.exists('wwwroot/assets/data/top_products.csv')
+    if status:
+        return 1
+    else:
+        return 0
+
 def sql_executor(sql_cmd:str) -> dict:
     try:
         # try to execute the statement
