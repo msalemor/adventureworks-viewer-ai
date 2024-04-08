@@ -36,12 +36,11 @@ class GPTAgent:
                 max_tokens=max_tokens,
                 temperature=temperature
             )
-        
-        #return ('assistant',user_name,user_id,str(completion.choices[0].message.content))
+                
         result = str(completion.choices[0].message.content)        
-        output_messages = [
+        return [
             ChatMessage(role='user',user_name=user_name,user_id=user_id,content=prompt,columns=[],rows=[]),
             ChatMessage(role='assistant',user_name=user_name,user_id=user_id,content=result,columns=[],rows=[])            
         ]
-        return output_messages
+
     

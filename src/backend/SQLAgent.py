@@ -14,12 +14,17 @@ class SQLAgent:
 
         self.settings : AgentSettings = settings
         self.client : AzureOpenAI = client
+
+        # Used in multi-agent mode to get addtional context
         self.get_context_delegate = None
 
     def process(self, user_name: str, user_id: str, prompt: str,max_tokens:int=500,temperature:float=0.3,context:str=None) -> list:
+
+        # Get additional context when in multi-agent mode
         if self.get_context_delegate:
             context = self.get_context_delegate()
         
+        # Configure and exectue the completion
         completion = self.client.chat.completions.create(
                 model=self.settings.model_deployment,
                 messages=[
@@ -36,18 +41,22 @@ class SQLAgent:
                 temperature=temperature
             )
         
-        results = str(completion.choices[0].message.content)
-        results = results.replace("```","")
-        results = results.replace("\n"," ")
-        results = results.replace("sql","") 
-        results = results.replace(";","")
-        row_and_cols= rep.sql_executor(results)
+        # Get the SQL statement from GPT
+        sql_statement = str(completion.choices[0].message.content)
 
+        # Remove the system message
+        sql_statement = sql_statement.replace("```","")
+        sql_statement = sql_statement.replace("\n"," ")
+        sql_statement = sql_statement.replace("sql","") 
+        sql_statement = sql_statement.replace(";","")
+
+        # Execute the SQL statement
+        row_and_cols= rep.sql_executor(sql_statement)
+
+        # Return the columns and rows
         columns = row_and_cols['columns']
         rows = row_and_cols['rows']
-        output_messages = [
+        return [
             ChatMessage(role='user',user_name=user_name,user_id=user_id,content=prompt,columns=[],rows=[]),
-            ChatMessage(role='assistant',user_name=user_name,user_id=user_id,content=results,columns=columns,rows=rows)
+            ChatMessage(role='assistant',user_name=user_name,user_id=user_id,content=sql_statement,columns=columns,rows=rows)
         ]
-
-        return output_messages

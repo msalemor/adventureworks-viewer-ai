@@ -40,6 +40,7 @@ const App = () => {
     const [input, setInput] = useState<string>('')
     const [messages, setMessages] = useState<IMessage[]>([])
     const [assistantId, setAssistantId] = useState<string>('')
+    const [openinfoarea, setOpeninfoarea] = useState(false)
 
     // effetcs
     useEffect(() => {
@@ -166,17 +167,82 @@ const App = () => {
     const getModeHelp = () => {
         switch (settings.mode) {
             case Mode.Chatbot:
-                return 'Chatbot is connected to top customers and products.\nSamples:\nWrite a demand letter to the customer with the highest balance?\nWhat are the top 5 products sold?'
+                return '**Chatbot:** is connected to top customers and products. Examples:\n- Write a demand letter to the customer with the highest balance?\n- What are the top 5 products sold?'
             case Mode.SqlBot:
-                return "Sqlbot is Connected to all tables.\nSamples:\nWhat customers are in the United States?\nWhat products have 'bike' in the description?"
+                return "**Sqlbot:** is connected to all tables including customers, top customers, products, top products, and orders. Examples:\n\n- What customers are in the United States?\n- What products have 'bike' in the description?"
             case Mode.Assistant:
-                return 'Assistants API bot is connected to top customers and products.\nSamples:\nCreate a chart of the sales by country.\nWhat are the top 5 products sold?'
+                return '**Assistants API bot:** is connected to top customers and products.\Examples:\n- Create a chart of the sales by country.\n- What are the top 5 products sold?'
             case Mode.MultiAgent:
-                return 'Multiagent bot is connected to top customers, products, weather, and shipping costs.'
+                return '**Multiagent bot:** is connected to top customers, products, weather, and shipping costs. Examples:\n- What are the top 5 products sold?\n- Write a query to find the customer with the highest balance.'
             default:
                 return 'No AI mode'
         }
     }
+
+    // type Comparator = (a: any, b: any) => number;
+    // function getComparator(sortColumn: string): any {
+    //     // switch (sortColumn) {
+    //     //     case 'assignee':
+    //     //     case 'title':
+    //     //     case 'client':
+    //     //     case 'area':
+    //     //     case 'country':
+    //     //     case 'contact':
+    //     //     case 'transaction':
+    //     //     case 'account':
+    //     //     case 'version':
+    //     //         return (a, b) => {
+    //     //             return a[sortColumn].localeCompare(b[sortColumn]);
+    //     //         };
+    //     //     case 'available':
+    //     //         return (a, b) => {
+    //     //             return a[sortColumn] === b[sortColumn] ? 0 : a[sortColumn] ? 1 : -1;
+    //     //         };
+    //     //     case 'id':
+    //     //     case 'progress':
+    //     //     case 'startTimestamp':
+    //     //     case 'endTimestamp':
+    //     //     case 'budget':
+    //     //         return (a, b) => {
+    //     //             return a[sortColumn] - b[sortColumn];
+    //     //         };
+    //     //     default:
+    //     //         throw new Error(`unsupported sortColumn: "${sortColumn}"`);
+    //     // }
+    //     const t = gridColsRow.rows[0][sortColumn]
+    //     if (typeof t === 'number') {
+    //         return (a: any, b: any): number => {
+    //             return a[sortColumn] - b[sortColumn];
+    //         };
+    //     } else if (typeof t === 'boolean') {
+    //         return (a: any, b: any): number => {
+    //             return a[sortColumn] === b[sortColumn] ? 0 : a[sortColumn] ? 1 : -1;
+    //         };
+    //     } else if (typeof t === 'string' || t === undefined || t == null) {
+    //         return (a: any, b: any): number => {
+    //             //return a[sortColumn] === b[sortColumn] ? 0 : a[sortColumn] ? 1 : -1
+    //             const ac = a[sortColumn] || ''
+    //             const bc = b[sortColumn] || ''
+    //             //return a[sortColumn] > (b[sortColumn]) ? 1 : -1
+    //             return ac.localeCompare(bc);
+    //         }
+    //     }
+    // }
+
+    // const sortedRows = useMemo((): readonly any[] => {
+    //     if (sortColumns.length === 0) return gridColsRow.rows;
+
+    //     return [...gridColsRow.rows].sort((a, b) => {
+    //         for (const sort of sortColumns) {
+    //             const comparator = getComparator(sort.columnKey);
+    //             const compResult = comparator(a, b);
+    //             if (compResult !== 0) {
+    //                 return sort.direction === 'ASC' ? compResult : -compResult;
+    //             }
+    //         }
+    //         return 0;
+    //     });
+    // }, [gridColsRow.rows, sortColumns]);
 
     // JSX
     return (
@@ -258,11 +324,18 @@ const App = () => {
                         <DataGrid
                             sortColumns={sortColumns}
                             onSortColumnsChange={setSortColumns}
-                            className='h-[calc(100vh-75px-35px-96px)]' columns={gridColsRow.columns} rows={gridColsRow.rows} />
+                            className='h-[calc(100vh-75px-35px-96px)]'
+                            columns={gridColsRow.columns}
+                            rows={gridColsRow.rows}
+                            defaultColumnOptions={{
+                                //sortable: true,
+                                resizable: true
+                            }}
+                        />
                     </section>
                 </main>
                 <aside className={settings.mode !== Mode.NoAI ? 'w-1/3 flex flex-col' : 'hidden'}>
-                    <div className="bg-slate-950 text-white h-[calc(100vh-40px-36px-140px)] p-2 space-y-2 overflow-auto">
+                    <div className={"bg-slate-950 text-white p-2 space-y-2 overflow-auto " + (openinfoarea ? "h-[calc(100vh-40px-36px-240px)]" : "h-[calc(100vh-40px-36px-140px)]")}>
                         {messages.map((msg, idx) => <>
                             {msg.role === 'user' && <div key={idx} className='bg-slate-700 p-2 rounded-lg w-[95%] ml-auto'>
                                 {msg.content}
@@ -287,6 +360,18 @@ const App = () => {
                             />
                         </div>}
                     </div>
+                    {openinfoarea &&
+                        <div id="infoarea" className="h-[100px] bg-yellow-100 text-black">
+                            <div className="flex">
+                                <div className="h-full overflow-auto">
+                                    <Markdown className='w-full h-[100px] p-2'>{getModeHelp()}</Markdown>
+                                </div>
+                                <button className="px-1 outline-none top-9"
+                                    onClick={() => setOpeninfoarea(false)}
+                                ><MdOutlineClear /></button>
+                            </div>
+
+                        </div>}
                     <div className="flex bg-slate-900 p-2 h-[150px]">
                         <textarea className='w-full outline-none px-1 rounded-lg py-1'
                             value={input}
@@ -299,8 +384,8 @@ const App = () => {
                             <button className='outline-none text-2xl px-1 text-red-600' title='Clear Messages'
                                 onClick={() => setMessages([])}
                             ><MdOutlineClear /></button>
-                            <button className='outline-none text-2xl px-1 text-slate-300' title={getModeHelp()}
-                                onClick={() => setMessages([])}
+                            <button className='outline-none text-2xl px-1 text-slate-300' title='Infomation and Samples'
+                                onClick={() => setOpeninfoarea(true)}
                             ><IoMdInformationCircleOutline /></button>
                         </div>
                     </div>

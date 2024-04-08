@@ -234,11 +234,13 @@ def export_top_products_csv():
 
 def sql_executor(sql_cmd:str) -> dict:
     try:
+        # try to execute the statement
         cursor = conn.cursor()    
         cursor.execute(sql_cmd)
         rows = cursor.fetchall()    
         columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
         return {'columns':columns,'rows':rows}
     except:
+        logging.warning(f"Error executing sql statement: {sql_cmd}")
         return {'columns':[],'rows':[]}
     
