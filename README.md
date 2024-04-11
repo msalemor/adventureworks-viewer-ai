@@ -2,6 +2,22 @@
 
 A demo application to showcase adding intelligence to an application with different levels of complexity.
 
+## Architecture
+
+```mermaid
+graph LR;
+  A(user)<-->F(Frontend)
+  F<-->B(Backend)
+  B<-->S[Secrets]
+  B<-->O(GPTBot)
+  B<-->Asst(Assistants API Bot)
+  B<-->SQL(Sqbot)
+  B<-->M(Multiagent Bot)
+  M<-->O
+  M<-->SQL
+  M<-->Asst
+```
+
 ## Requirements
 
 ### Database
