@@ -18,7 +18,7 @@ graph LR;
 ```
 
 - Base on the UI selection
-  - The system will have no AI
+  - No AI
   - Chatbot
   - Sqlbot
   - Assistants API Bot
