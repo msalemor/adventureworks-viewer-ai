@@ -277,7 +277,7 @@ const App = () => {
     return (
         <>
             <header className="bg-slate-950 h-[40px] text-white p-2 flex items-center">
-                <h1 className="text-xl font-bold">AdventureWorks Viewer</h1>
+                <h1 className="text-xl font-bold">AdventureWorks AI Viewer</h1>
             </header>
 
             <div className="flex h-[calc(100vh-40px-26px)]">

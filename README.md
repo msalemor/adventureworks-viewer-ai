@@ -1,6 +1,8 @@
 # Adventureworks-AI-Viewer
 
-A demo application to showcase adding intelligence to an application with different levels of complexity.
+## Overview
+
+A demo application to showcase adding intelligence to an application at different levels of complexity.
 
 ## Architecture
 
@@ -52,7 +54,7 @@ graph LR;
 - react-loader-spinner
 - react-markdown
 
-## Debuging
+## Debugging
 
 - Install the frontend dependencies: `cd src/frontend && npm install`
 - Install the backend dependencies: `cd src/backend && pip install -r requirements.txt`
@@ -72,5 +74,5 @@ OPENAI_VERSION=2024-02-15-preview
 OPENAPI_URL=/openapi.json
 ```
 
-- Start the backend: `cd src/backend && sh run.sh` or `uvicorn main:app --reload`
+- Start the backend: `cd src/backend && sh run.sh` or `cd src/backend && uvicorn main:app --reload`
 - Start the frontend: `cd src/frontend && npm run dev`
