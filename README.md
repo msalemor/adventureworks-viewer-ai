@@ -6,7 +6,7 @@ A demo application to showcase adding intelligence to an application with differ
 
 ```mermaid
 graph LR;
-  A[(User)]<-->F(Frontend)
+  A((User))<-->F(Frontend)
   F<-->B(Backend)
   B<-->O(GPTBot)
   B<-->Asst(Assistants API Bot)
