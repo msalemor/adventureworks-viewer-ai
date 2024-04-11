@@ -17,6 +17,13 @@ graph LR;
   M<-->Asst
 ```
 
+- Base on the UI selection
+  - The system will have no AI
+  - Chatbot
+  - Sqlbot
+  - Assistants API Bot
+  - Multiagent Bot
+
 ## Requirements
 
 ### Database
