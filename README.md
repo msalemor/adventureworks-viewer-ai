@@ -28,7 +28,7 @@ graph LR;
 
 ### Database
 
-- Deploy Azure SQL Database with Adventure Work to Azure
+- Deploy Azure SQL Database with AdventuresWorks to Azure
 - Execute the scripts at: `src/backend/database/sql_views_script.sql` to add the supporting views
 
 ### Backend
@@ -48,3 +48,26 @@ graph LR;
 - react-icons
 - react-loader-spinner
 - react-markdown
+
+## Debuging
+
+- Install the frontend dependencies: `cd src/frontend && npm install`
+- Install the backend dependencies: `cd src/backend && pip install -r requirements.txt`
+- Create or update the evnironment variable files at: `src/backend/.env`
+
+```bash
+DB_SERVER=<NAME>.database.windows.net
+DB_USER=<ADMIN_USER>
+DB_PASSWORD=<ADMIN_PASSWORD>
+DB_DATABASE=<DB_NAME>
+
+OPENAI_FULL_URI=https://<NAME>.openai.azure.com/openai/deployments/gpt4-1106-preview/chat/completions?api-version=2024-02-15-preview
+OPENAI_URI=https://<NAME>.openai.azure.com/
+OPENAI_KEY=<API_KEY>
+OPENAI_GPT_DEPLOYMENT=gpt4-1106-preview
+OPENAI_VERSION=2024-02-15-preview
+OPENAPI_URL=/openapi.json
+```
+
+- Start the backend: `cd src/backend && sh run.sh` or `uvicorn main:app --reload`
+- Start the frontend: `cd src/frontend && npm run dev`
