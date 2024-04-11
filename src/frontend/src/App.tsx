@@ -43,8 +43,15 @@ const App = () => {
     const [openinfoarea, setOpeninfoarea] = useState(false)
     const [systemStatus, setSystemStatus] = useState({ status: 'Online', total: 2 })
 
-    // effetcs
+    // effects
     useEffect(() => {
+        (async () => {
+            await getAssistantId()
+        })()
+    }, [settings])
+
+    useEffect(() => {
+        /* Fetch the initial data */
         (async () => {
             try {
                 let resp = await axios.get<ICounts>(URL_BASE + '/api/counts')
@@ -57,7 +64,17 @@ const App = () => {
         })()
     }, [])
 
+    const refreshTime = 5000
+    useEffect(() => {
+        // Set up an interval to fetch data at regular intervals
+        const comInterval = setInterval(fetchStatus, refreshTime);
+
+        // Clean up the interval when the component unmounts
+        return () => clearInterval(comInterval);
+    }, [])
+
     const fetchStatus = async () => {
+        /* Fetch the system status */
         try {
             const response = await axios.get<{ status: string, total: number }>(URL_BASE + '/api/status');
             console.info(response.data)
@@ -68,19 +85,11 @@ const App = () => {
         }
     };
 
-    const refreshTime = 5000
-    useEffect(() => {
-        // Set up an interval to fetch data at regular intervals
-        const comInterval = setInterval(fetchStatus, refreshTime);
-
-        // Clean up the interval when the component unmounts
-        return () => clearInterval(comInterval);
-    }, [])
 
     // supporting functions
-    const getGridDate = async (evt: any, target: string) => {
+    const getGridData = async (evt: any, target: string) => {
+        /* Fetch the grid data */
         evt.preventDefault();
-
         if (processing) return
         try {
             setProcessing(true)
@@ -120,6 +129,7 @@ const App = () => {
     }
 
     const getAssistantId = async () => {
+        /* Fetch the assistant ID */
         try {
             const resp = await axios.get<{ assistant_id: string }>(URL_BASE + '/api/assistant/id')
             setAssistantId(resp.data.assistant_id)
@@ -128,13 +138,9 @@ const App = () => {
         }
     }
 
-    useEffect(() => {
-        (async () => {
-            await getAssistantId()
-        })()
-    }, [settings])
 
     const Process = async () => {
+        /* Process the input on the backend */
         if (processing) return
         setProcessing(true)
 
@@ -186,6 +192,7 @@ const App = () => {
     }
 
     const getModeHelp = () => {
+        /* Get the help text for the selected mode */
         switch (settings.mode) {
             case Mode.Chatbot:
                 return '**Chatbot:** is connected to top customers and products. Examples:\n- Write a demand letter to the customer with the highest balance?\n- What are the top 5 products sold?'
@@ -200,6 +207,7 @@ const App = () => {
         }
     }
 
+    // TODO: Add sorting
     // type Comparator = (a: any, b: any) => number;
     // function getComparator(sortColumn: string): any {
     //     // switch (sortColumn) {
@@ -311,31 +319,31 @@ const App = () => {
                     {/* select grid information */}
                     <section className="bg-slate-900 h-[100px] flex space-x-2">
                         <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer hover:bg-blue-500'
-                            onClick={(evt) => getGridDate(evt, 'customers')}
+                            onClick={(evt) => getGridData(evt, 'customers')}
                         >
                             <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.customers}</label>
                             <label className='font-semibold uppercase text-3xl'><BsPersonFill title='Customers' /></label>
                         </div>
                         <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer hover:bg-blue-500'
-                            onClick={(evt) => getGridDate(evt, 'sales')}
+                            onClick={(evt) => getGridData(evt, 'sales')}
                         >
                             <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.topCustomers}</label>
                             <label className='font-semibold uppercas text-3xl'><BsPersonFillUp title='Top Customers' /></label>
                         </div>
                         <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer hover:bg-blue-500'
-                            onClick={(evt) => getGridDate(evt, 'products')}
+                            onClick={(evt) => getGridData(evt, 'products')}
                         >
                             <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.products}</label>
                             <label className='font-semibold uppercase text-3xl'><RiProductHuntLine title='Products' /></label>
                         </div>
                         <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer hover:bg-blue-500'
-                            onClick={(evt) => getGridDate(evt, 'sold')}
+                            onClick={(evt) => getGridData(evt, 'sold')}
                         >
                             <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.topProducts}</label>
                             <label className='font-semibold uppercase text-3xl'><RiProductHuntFill title='Top Products' /></label>
                         </div>
                         <div className='space-y-2 w-[120px] bg-blue-600 text-white flex flex-col p-2 items-center justify-center hover:cursor-pointer hover:bg-blue-500'
-                            onClick={(evt) => getGridDate(evt, 'orders')}
+                            onClick={(evt) => getGridData(evt, 'orders')}
                         >
                             <label className='bg-white text-blue-600 rounded-xl px-1'>{recordCounts.orderDetails}</label>
                             <label className='font-semibold uppercase text-3xl'><GiCargoCrate title='Orders' /></label>
@@ -419,8 +427,6 @@ const App = () => {
                 {(settings.mode === Mode.Assistant || settings.mode === Mode.MultiAgent) && <div className='h-full flex items-center px-1 bg-slate-300 text-black'>
                     <label className="font-semibold mr-1">ID:</label>
                     <label>{assistantId}</label></div>}
-
-                {/* TODO: Add the assistant ID */}
                 {/* TODO: Add butto to reset assistant ID */}
             </footer >
         </>

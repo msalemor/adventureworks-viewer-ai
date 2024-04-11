@@ -3,6 +3,7 @@ import os
 
 
 class AgentSettings:
+    """This class is used to load the settings from the .env file."""
     def __init__(self):
         load_dotenv()
         self.api_endpoint = os.getenv("OPENAI_URI")

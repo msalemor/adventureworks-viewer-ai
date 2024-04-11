@@ -1,5 +1,8 @@
 import logging
 import os
+import asyncio
+import requests
+import threading
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,9 +40,11 @@ sql_agent = SQLAgent(settings, client)
 store = KCVStore('settings.db')
 #endregion
 
+#region: FastAPI App
 app = FastAPI(openapi_url=OPENAPI_URL, title="AdventureWorks API", version="0.1.0")
+#endregion
 
-#region: CORS
+#region: FastAPI CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[CORS_ORIGINS],
@@ -49,7 +54,7 @@ app.add_middleware(
 )
 #endregion
 
-#region: API
+#region: FastAPI APIs
 @app.post("/api/reindex")
 def reindex():    
     rep.export_top_customers_csv()
@@ -96,10 +101,10 @@ def sqlbot(request: ChatRequest):
 #endregion
 
 #region: Assistants
-def reset_assistant() -> AssistantAgent:
-    
+def reset_assistant() -> AssistantAgent:    
     store.delete('assistant','id')
     try:
+        val = store.get('assistant','id')
         agent = client.beta.assistants.retrieve(val)
         assistant_agent = AssistantAgent(settings, client, "", "", "", tools_list=[], assistant=agent)
         assistant_agent.cleanup()
@@ -192,4 +197,28 @@ if serve_files=="Yes":
 reindex_content_files = os.getenv("REINDEX_FILES") or "Yes"
 if reindex_content_files=="Yes":
     reindex()
+#endregion
+
+#region: Azure Web App - Freee tier keep alive
+async def keep_alive():
+    print("Keep alive")
+    while True:
+        try:
+            requests.get("http://localhost:8000/api/status")
+            logger.info("Keep alive")
+        except:
+            pass
+        try:
+            requests.get("http://localhost/api/status")
+            logger.info("Keep alive")
+        except:
+            pass
+        # wait for 9 minutes
+        await asyncio.sleep(60*9)
+        
+def wrap_async_func():
+    asyncio.run(keep_alive())
+
+_thread = threading.Thread(target=wrap_async_func)
+_thread.start()
 #endregion

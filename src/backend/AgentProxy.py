@@ -6,17 +6,15 @@ from Models import ChatMessage
 
 
 class AgentProxy:
+    """This class is used to proxy the agent requests to the appropriate agent based on the intent."""
     def __init__(self, settings=None, client=None, registered_agents: list[AgentRegistration] = None):
         self.settings = settings
         self.client = client
         self.registered_agents = registered_agents
-
         if registered_agents is None:
             raise ArgumentExceptionError("Missing registered_agents")
-
         if settings is None:
             self.settings = AgentSettings()
-
         if client is None:
             client = AzureOpenAI(
                 api_key=self.settings.api_key,

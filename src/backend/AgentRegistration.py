@@ -5,8 +5,7 @@ from AssistantAgent import AssistantAgent
 from Models import BaseAgent
 
 class AgentRegistration:
-    """This function is to hold the agent registration information"""
-
+    """This class is used to register an agent with the proxy."""
     def __init__(self, settings=None, client=None, intent: str = None, intent_desc: str = None, agent: BaseAgent = None):
         self.settings = settings
         self.client = client
@@ -18,10 +17,8 @@ class AgentRegistration:
             raise ArgumentExceptionError("intent parameter is missing")
         if intent_desc is None:
             raise ArgumentExceptionError("intent_desc parameter is missing")
-
         if settings is None:
             self.settings = AgentSettings()
-
         if client is None:
             client = AzureOpenAI(
                 api_key=self.settings.api_key,

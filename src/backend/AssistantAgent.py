@@ -1,6 +1,5 @@
 from typing import Iterable
 import os
-import io
 import uuid
 import time
 import logging
@@ -19,6 +18,7 @@ from Models import ChatMessage
 
 
 class AssistantAgent:
+    """This class is used to create an assistant agent."""
     def __init__(self, settings:AgentSettings, client:AzureOpenAI, name :str, instructions:str, data_folder:str, tools_list, keep_state: bool = False, fn_calling_delegate=None, assistant=None):
         if name is None:
             raise ArgumentExceptionError("name parameter missing")
@@ -26,7 +26,6 @@ class AssistantAgent:
             raise ArgumentExceptionError("instructions parameter missing")
         if tools_list is None:
             raise ArgumentExceptionError("tools_list parameter missing")
-
         self.assistant :Assistant = assistant
         self.settings : AgentSettings= settings
         self.client : AzureOpenAI = client
@@ -42,11 +41,21 @@ class AssistantAgent:
         self.get_agent()
 
     def upload_file(self, path: str) -> FileObject:
-        print(path)
+        """Uploads a file to the assistant.
+           Args:
+              path (str): The path to the file to upload.
+           Returns:
+
+        """
+        logging.info(f"Uploading file: {path}")            
         with Path(path).open("rb") as f:
             return self.client.files.create(file=f, purpose="assistants")
 
     def upload_all_files(self):
+        """Uploads all files in the data folder to the assistant.
+           Args:
+              data_folder (str): The path to the data folder.
+        """
         files_in_folder = os.listdir(self.data_folder)
         local_file_list = []
 
@@ -59,6 +68,14 @@ class AssistantAgent:
         self.file_ids = [file.id for file in local_file_list]
 
     def get_agent(self):
+        """Creates an assistant with the specified name, instructions, and tools.
+           Args:
+              name (str): The name of the assistant.
+              instructions (str): The instructions for the assistant.
+              tools (list): The tools for the assistant.
+           Returns:
+              Assistant: The assistant that was created.
+        """
         # If the assistant is already created, return
         if self.assistant is not None:
             return
@@ -83,6 +100,10 @@ class AssistantAgent:
             )
 
     def delete_thread(self,thread_id:str):
+        """Deletes a thread.
+           Args:
+              thread_id (str): The ID of the thread to delete.
+        """
         if not self.keep_state:
             try:
                 logging.info(f"Deleted thread: {thread_id}")
@@ -92,23 +113,14 @@ class AssistantAgent:
 
 
     def process(self, user_name: str, user_id: str, prompt: str) -> list:
-
-        # if keep_state:
-        #     thread_id = check_if_thread_exists(user_id)
-
-        #     # If a thread doesn't exist, create one and store it
-        #     if thread_id is None:
-        #         print(f"Creating new thread for {name} with user_id {user_id}")
-        #         thread = self.client.beta.threads.create()
-        #         store_thread(user_id, thread)
-        #         thread_id = thread.id
-        #     # Otherwise, retrieve the existing thread
-        #     else:
-        #         print(
-        #             f"Retrieving existing thread for {name} with user_id {user_id}")
-        #         thread = self.client.beta.threads.retrieve(thread_id)
-        #         add_thread(thread)
-        # else:
+        """Processes a prompt with the assistant.
+           Args:
+              user_name (str): The name of the user.
+              user_id (str): The ID of the user.
+              prompt (str): The prompt to process.
+           Returns:
+              list: The messages from the assistant.
+        """
         thread = self.client.beta.threads.create()
 
         self.client.beta.threads.messages.create(
@@ -157,10 +169,20 @@ class AssistantAgent:
             print("Deleted thread: ", thread.id)
 
     def read_assistant_file(self, file_id: str):
+        """Reads the content of a file from the assistant.
+           Args:
+              file_id (str): The ID of the file to read.
+           Returns:
+              bytes: The content of the file.
+        """
         response_content = self.client.files.content(file_id)
         return response_content.read()
 
     def print_messages(self, name: str, messages: Iterable[MessageFile]) -> list:
+        """Prints the messages from the assistant.
+           Args:
+              messages (Iterable[MessageFile]): The messages from the assistant.
+        """
         message_list = []
 
         # Get all the messages till the last user message
@@ -220,6 +242,8 @@ class AssistantAgent:
         return output_list
 
     def cleanup(self):
+        """Cleans up the assistant and threads.
+        """
         try:
             print(self.client.beta.assistants.delete(self.assistant.id))
             print("Deleting: ", len(self.ai_threads), " threads.")
