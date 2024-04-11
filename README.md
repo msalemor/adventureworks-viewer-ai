@@ -11,7 +11,7 @@ graph LR;
   B<-->O(GPTBot)
   B<-->Asst(Assistants API Bot)
   B<-->SQL(Sqbot)
-  B<-->M(Multiagent Bot<br/>Semantic Processing)
+  B<-->M(Proxy Agent<br/>Semantic Processing)
   M<-->O
   M<-->SQL
   M<-->Asst
