@@ -8,7 +8,6 @@ A demo application to showcase adding intelligence to an application with differ
 graph LR;
   A(user)<-->F(Frontend)
   F<-->B(Backend)
-  B<-->S[Secrets]
   B<-->O(GPTBot)
   B<-->Asst(Assistants API Bot)
   B<-->SQL(Sqbot)
