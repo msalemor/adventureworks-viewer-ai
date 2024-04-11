@@ -9,9 +9,9 @@ graph LR;
   A(user)<-->F(Frontend)
   F<-->B(Backend)
   B<-->O(GPTBot)
-  B<-->Asst(Assistants API Bot<br/>Semantic Processing)
+  B<-->Asst(Assistants API Bot)
   B<-->SQL(Sqbot)
-  B<-->M(Multiagent Bot)
+  B<-->M(Multiagent Bot<br/>Semantic Processing)
   M<-->O
   M<-->SQL
   M<-->Asst
