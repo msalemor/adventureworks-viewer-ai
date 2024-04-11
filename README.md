@@ -12,13 +12,17 @@ A demo application to showcase adding intelligence to an application with differ
 ### Backend
 
 - Python 3.11
-- OpenAI SDK (1.16.2 or later)
+- openai==1.16.1
+- fastapi==0.110.1
+- uvicorn[standard]==0.29.0
+- pymssql==2.2.11
+- pillow==10.3.0
 
 ### Frontend 
 
 - React
 - Tailwind CSS
-- Axios
 - react-data-grid
 - react-icons
-
+- react-loader-spinner
+- react-markdown
