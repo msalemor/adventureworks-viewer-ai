@@ -17,7 +17,7 @@ graph LR;
   M<-->Asst
 ```
 
-- Base on the UI selection, the system will have:
+- Based on the UI selection, the system will have:
   - No AI
   - Chatbot
   - Sqlbot
