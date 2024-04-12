@@ -36,7 +36,7 @@ graph LR;
 - Deploy Azure SQL Database with AdventuresWorks to Azure
 - Execute the scripts at: `src/backend/database/sql_views_script.sql` to add the supporting views
 
-### Backend
+### Backend - Python
 
 - Python 3.11
 - openai==1.16.1
@@ -45,7 +45,9 @@ graph LR;
 - pymssql==2.2.11
 - pillow==10.3.0
 
-### Frontend 
+### Backend - C# (coming soon)
+
+### Frontend - React
 
 - React
 - Tailwind CSS
@@ -54,7 +56,7 @@ graph LR;
 - react-loader-spinner
 - react-markdown
 
-## Debugging
+## Debugging - Python
 
 - Install the frontend dependencies: `cd src/frontend && npm install`
 - Install the backend dependencies: `cd src/backend && pip install -r requirements.txt`
@@ -76,3 +78,6 @@ OPENAPI_URL=/openapi.json
 
 - Start the backend: `cd src/backend && sh run.sh` or `cd src/backend && uvicorn main:app --reload`
 - Start the frontend: `cd src/frontend && npm run dev`
+
+
+## Debugging - C# (Coming soon)

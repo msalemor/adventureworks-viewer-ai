@@ -9,7 +9,7 @@ RUN pip install -r requirements.txt
 COPY . .
 
 COPY wwwroot /app/wwwroot
-RUN mkdir /app/wwwroot/assets/data
+RUN mkdir -p /app/wwwroot/assets/data
 
 EXPOSE 80
 ENV OPENAPI_URL=

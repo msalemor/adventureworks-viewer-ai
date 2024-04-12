@@ -2,6 +2,7 @@ export enum Mode {
     NoAI = 'No AI',
     Chatbot = 'Chatbot',
     SqlBot = 'Sqlbot',
+    RAG = 'RAG',
     Assistant = 'Assitants API',
     MultiAgent = 'Multiagent',
 }

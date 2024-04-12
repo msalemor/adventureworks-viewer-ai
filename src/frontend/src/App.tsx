@@ -153,6 +153,8 @@ const App = () => {
                 URL = URL_BASE + '/api/chatbot'
             } else if (settings.mode === Mode.SqlBot) {
                 URL = URL_BASE + '/api/sqlbot'
+                // } else if (settings.mode === Mode.RAG) {
+                //     URL = URL_BASE + '/api/rag'
             } else if (settings.mode === Mode.Assistant) {
                 URL = URL_BASE + '/api/assistants'
             } else if (settings.mode === Mode.MultiAgent) {

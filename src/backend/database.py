@@ -78,7 +78,7 @@ SELECT TOP (1000) [CustomerID]
       ,[City]
       ,[StateProvince]
       ,[CountryRegion]
-  FROM [SalesLT].[vTopSales]
+  FROM [SalesLT].[vTopCustomers]
 
 Sample queries:
 Q: What customers are in the United States?
@@ -187,7 +187,7 @@ def get_order_details():
 
 def get_order_details():
     cursor = conn.cursor()
-    sql_cmd = """select * from [SalesLT].[vOrderDetails]"""
+    sql_cmd = """select * from [SalesLT].[vOrderDetails] order by CustomerID,SalesOrderID,ProductID"""
     cursor.execute(sql_cmd)
     rows = cursor.fetchall()    
     columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
