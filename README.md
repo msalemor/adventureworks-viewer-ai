@@ -4,6 +4,8 @@
 
 A demo application to showcase adding intelligence to an application at different levels of complexity.
 
+![A screencapture of Advetureworks AI viewer showing getting data in differente modes.](images/adventureworks-ai-viewer.png)
+
 ## Architecture
 
 ```mermaid
