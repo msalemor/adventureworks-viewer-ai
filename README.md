@@ -41,7 +41,7 @@ This app leverages the SQL Adventurework database data. However, additional view
 
 ![A screen capture of Advetureworks AI viewer showing getting data in differente modes.](images/azure-sql-sample-data.png)
 
-- Execute the scripts at: `src/backend/database/sql_views_script.sql` to add the supporting views
+- Execute the scripts at: [src/database/views_script.sql](src/database/views_script.sql) to add the supporting views
 
 ### Backend - Python
 
