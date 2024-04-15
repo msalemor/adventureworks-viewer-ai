@@ -41,6 +41,7 @@ store = KCVStore('settings.db')
 #endregion
 
 #region: FastAPI App
+rep.create_directory('wwwroot/assets/data')
 app = FastAPI(openapi_url=OPENAPI_URL, title="AdventureWorks API", version="0.1.0")
 #endregion
 
@@ -79,17 +80,13 @@ def read_data():
 def read_data():
     return rep.get_products()
 
-@app.get("/api/products/sold")
+@app.get("/api/products/top")
 def read_data():
     return rep.get_top_products()
 
 @app.get("/api/orders")
 def read_data():
     return rep.get_order_details()
-
-@app.get("/api/sales/count")
-def read_data():
-    return rep.get_top_sales_count()
 
 @app.post('/api/chatbot')
 def chatbot(request: ChatRequest):
@@ -155,7 +152,7 @@ def get_app_status():
     if rep.get_db_status() == 0:
         system_down += "Db"
     if rep.get_files_status() == 0:
-        system_down += "Files"
+        system_down += "Files"    
     
     if total ==2:
         return {"status":"Online","total":total}

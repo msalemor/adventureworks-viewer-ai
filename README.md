@@ -4,7 +4,7 @@
 
 A demo application to showcase adding intelligence to an application at different levels of complexity.
 
-![A screencapture of Advetureworks AI viewer showing getting data in differente modes.](images/adventureworks-ai-viewer.png)
+![A screen capture of Advetureworks AI viewer showing getting data in differente modes.](images/adventureworks-ai-viewer.png)
 
 ## Architecture
 
@@ -37,6 +37,11 @@ graph LR;
 
 - Deploy Azure SQL Database with AdventuresWorks to Azure
 - Execute the scripts at: `src/backend/database/sql_views_script.sql` to add the supporting views
+
+#### Image
+
+![A screen capture of Advetureworks AI viewer showing getting data in differente modes.](images/azure-sql-sample-data.png)
+
 
 ### Backend - Python
 

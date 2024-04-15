@@ -107,7 +107,7 @@ const App = () => {
                     url = URL_BASE + '/api/products'
                     break
                 case 'sold':
-                    url = URL_BASE + '/api/products/sold'
+                    url = URL_BASE + '/api/products/top'
                     break
                 case 'orders':
                     url = URL_BASE + '/api/orders'

@@ -24,31 +24,24 @@ select a.CustomerID, A.LastName, a.FirstName, a.EmailAddress, a.SalesPerson, c.C
         on b.CustomerID=a.CustomerID
 GO
 
-
-CREATE VIEW [SalesLT].[vOrderDetails]
+CREATE VIEW [SalesLT].[vTopCustomers]
 AS
-    select b.CustomerID, A.SalesOrderID, A.ProductID, D.Name Category, E.Name Model, G.[Description], A.OrderQty, A.UnitPrice, A.UnitPriceDiscount, A.LineTotal
-    from SalesLT.SalesOrderDetail A
+    select A.CustomerID, b.LastName, B.FirstName, B.EmailAddress, b.SalesPerson, A.Total, D.City, D.StateProvince, D.CountryRegion
+    from (
+select A.CustomerID, sum(a.TotalDue) Total
+        from SalesLT.SalesOrderHeader A
+        GROUP by a.CustomerID
+) A
         inner join
-        SalesLT.SalesOrderHeader B
-        on A.SalesOrderID = b.SalesOrderID
+        SalesLT.Customer B
+        on A.CustomerID = b.CustomerID
         inner JOIN
-        SalesLT.Product C
-        on A.ProductID=c.ProductID
-        inner join
-        SalesLT.ProductCategory D
-        on c.ProductCategoryID=d.ProductCategoryID
-        inner join
-        SalesLT.ProductModel E
-        on c.ProductModelID=e.ProductModelID
-        INNER join
-        SalesLT.ProductModelProductDescription F
-        on f.ProductModelID=e.ProductModelID and f.Culture='en'
-        inner join
-        SalesLT.ProductDescription G
-        on g.ProductDescriptionID = f.ProductDescriptionID
+        SalesLT.CustomerAddress C
+        on A.CustomerID=c.CustomerID and c.AddressType='main office'
+        inner JOIN
+        SalesLT.Address D
+        on c.AddressID=d.AddressID
 GO
-
 
 CREATE VIEW [SalesLT].[vProductAndDescription]
 WITH
@@ -78,21 +71,34 @@ CREATE UNIQUE CLUSTERED INDEX [IX_vProductAndDescription] ON [SalesLT].[vProduct
 )WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-CREATE VIEW [SalesLT].[vTopCustomers]
+CREATE VIEW [SalesLT].[vTopProductsSold]
 AS
-    select A.CustomerID, b.LastName, B.FirstName, B.EmailAddress, b.SalesPerson, A.Total, D.City, D.StateProvince, D.CountryRegion
-    from (
-select A.CustomerID, sum(a.TotalDue) Total
-        from SalesLT.SalesOrderHeader A
-        GROUP by a.CustomerID
-) A
+    select ProductId, category, model, [description], sum(orderqty) TotalQty
+    from SalesLT.vOrderDetails
+    group by productid,category,model,[description]
+GO
+
+
+CREATE VIEW [SalesLT].[vOrderDetails]
+AS
+    select b.CustomerID, A.SalesOrderID, A.ProductID, D.Name Category, E.Name Model, G.[Description], A.OrderQty, A.UnitPrice, A.UnitPriceDiscount, A.LineTotal
+    from SalesLT.SalesOrderDetail A
         inner join
-        SalesLT.Customer B
-        on A.CustomerID = b.CustomerID
+        SalesLT.SalesOrderHeader B
+        on A.SalesOrderID = b.SalesOrderID
         inner JOIN
-        SalesLT.CustomerAddress C
-        on A.CustomerID=c.CustomerID and c.AddressType='main office'
-        inner JOIN
-        SalesLT.Address D
-        on c.AddressID=d.AddressID
+        SalesLT.Product C
+        on A.ProductID=c.ProductID
+        inner join
+        SalesLT.ProductCategory D
+        on c.ProductCategoryID=d.ProductCategoryID
+        inner join
+        SalesLT.ProductModel E
+        on c.ProductModelID=e.ProductModelID
+        INNER join
+        SalesLT.ProductModelProductDescription F
+        on f.ProductModelID=e.ProductModelID and f.Culture='en'
+        inner join
+        SalesLT.ProductDescription G
+        on g.ProductDescriptionID = f.ProductDescriptionID
 GO

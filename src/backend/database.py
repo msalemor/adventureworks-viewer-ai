@@ -23,62 +23,62 @@ conn = pymssql.connect(
 )  
 
 sql_schema = """
-Tables
+Tables:
 vCustomer: A table of customers.
+vTopCustomers: A table of customers and their purchase totals.
 vProductAndDescription: A table of products with their description.
-vOrderDetails: A table of order details by CustomerID and ProductID. This list does not container the customer last or fist name.
 vTopProductsSold: A table of the top products sold.
-vTopSales: A table of customers and their purchase totals.
+vOrderDetails: A table of order details by CustomerID and ProductID. This list does not container the customer last or fist name.
+
+Schemas:
+SELECT TOP (1000) [CustomerID]
+,[LastName]
+,[FirstName]
+,[EmailAddress]
+,[SalesPerson]
+,[City]
+,[StateProvince]
+,[CountryRegion]
+,[Orders]
+,[TotalDue]
+FROM [SalesLT].[vCustomers]
 
 SELECT TOP (1000) [CustomerID]
-      ,[LastName]
-      ,[FirstName]
-      ,[EmailAddress]
-      ,[SalesPerson]
-      ,[City]
-      ,[StateProvince]
-      ,[CountryRegion]
-      ,[Orders]
-      ,[TotalDue]
-  FROM [SalesLT].[vCustomers]
+,[LastName]
+,[FirstName]
+,[EmailAddress]
+,[SalesPerson]
+,[Total]
+,[City]
+,[StateProvince]
+,[CountryRegion]
+FROM [SalesLT].[vTopCustomers]
 
 SELECT TOP (1000) [ProductID]
-      ,[Name]
-      ,[ProductModel]
-      ,[Culture]
-      ,[Description]
-  FROM [SalesLT].[vProductAndDescription]
-
-
-SELECT TOP (1000) [CustomerID]
-      ,[SalesOrderID]
-      ,[ProductID]
-      ,[Category]
-      ,[Model]
-      ,[Description]
-      ,[OrderQty]
-      ,[UnitPrice]
-      ,[UnitPriceDiscount]
-      ,[LineTotal]
-  FROM [SalesLT].[vOrderDetails]
+,[Name]
+,[ProductModel]
+,[Culture]
+,[Description]
+FROM [SalesLT].[vProductAndDescription]
 
 SELECT TOP (1000) [ProductId]
-      ,[category]
-      ,[model]
-      ,[description]
-      ,[TotalQty]
-  FROM [SalesLT].[vTopProductsSold]
+,[category]
+,[model]
+,[description]
+,[TotalQty]
+FROM [SalesLT].[vTopProductsSold]
 
 SELECT TOP (1000) [CustomerID]
-      ,[LastName]
-      ,[FirstName]
-      ,[EmailAddress]
-      ,[SalesPerson]
-      ,[Total]
-      ,[City]
-      ,[StateProvince]
-      ,[CountryRegion]
-  FROM [SalesLT].[vTopCustomers]
+,[SalesOrderID]
+,[ProductID]
+,[Category]
+,[Model]
+,[Description]
+,[OrderQty]
+,[UnitPrice]
+,[UnitPriceDiscount]
+,[LineTotal]
+FROM [SalesLT].[vOrderDetails]  
 
 Sample queries:
 Q: What customers are in the United States?
@@ -87,40 +87,36 @@ Q: In what countries are there customers who have bought products?
 A: SELECT DISTINCT vCustomers.CountryRegion FROM SalesLT.vCustomers INNER JOIN SalesLT.vOrderDetails ON vCustomers.CustomerID = vOrderDetails.CustomerID
 """
 
-
-def get_customers():
-    logger.info("Getting customers")
+def __getcount(sql_cmd:str)->int:
     cursor = conn.cursor()
-    sql_cmd = """select * from SalesLT.vCustomers
-order by LastName,FirstName"""
+    cursor.execute(sql_cmd)
+    row = cursor.fetchone()
+    return row['count']
+
+def __get_rows_and_cols(sql_cmd:str):
+    cursor = conn.cursor()
     cursor.execute(sql_cmd)
     columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
     rows = cursor.fetchall()
-    return {'columns':columns,'rows':rows}    
+    return {'columns':columns,'rows':rows}
+
+def get_customers():
+    sql_cmd = """select * from SalesLT.vCustomers order by LastName,FirstName"""
+    return __get_rows_and_cols(sql_cmd)
 
 def get_customer_count() -> int:
-    cursor = conn.cursor()
     sql_cmd = """select count(*) as count from SalesLT.vCustomers"""
-    cursor.execute(sql_cmd)
-    row = cursor.fetchone()
-    return row['count']
+    return __getcount(sql_cmd)
 
 def get_top_customers():
-    cursor = conn.cursor()
     sql_cmd = """select CustomerID,LastName,FirstName,EmailAddress,SalesPerson,City,StateProvince,CountryRegion,Total 
 from [SalesLT].[vTopCustomers]
 order by total desc"""
-    cursor.execute(sql_cmd)
-    columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
-    rows = cursor.fetchall()        
-    return {'columns':columns,'rows':rows}
+    return __get_rows_and_cols(sql_cmd)    
 
 def get_top_customers_count() -> int:
-    cursor = conn.cursor()
     sql_cmd = """select count(*) as count from [SalesLT].[vTopCustomers]"""
-    cursor.execute(sql_cmd)
-    row = cursor.fetchone()
-    return row['count']
+    return __getcount(sql_cmd)
 
 def get_top_customers_csv_as_text():
     logger.info("Getting top customers as text")
@@ -135,29 +131,22 @@ def get_top_customers_csv_as_text():
     return text
 
 def get_products():
-    cursor = conn.cursor()
     sql_cmd = """select ProductId,Name,ProductModel,[Description] from [SalesLT].[vProductAndDescription]
 where culture='en' order by description"""
-    cursor.execute(sql_cmd)
-    columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
-    rows = cursor.fetchall()        
-    return {'columns':columns,'rows':rows}   
+    return __get_rows_and_cols(sql_cmd)
 
-def get_products_count() -> int:
-    cursor = conn.cursor()
+def get_products_count() -> int:    
     sql_cmd = """select count(*) as count from [SalesLT].[vProductAndDescription]
 where culture='en'"""
-    cursor.execute(sql_cmd)
-    row = cursor.fetchone()    
-    return row['count']
+    return __getcount(sql_cmd)
 
 def get_top_products():
-    cursor = conn.cursor()
     sql_cmd = """select * from [SalesLT].[vTopProductsSold] order by TotalQty desc"""
-    cursor.execute(sql_cmd)
-    columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
-    rows = cursor.fetchall()    
-    return {'columns':columns,'rows':rows}
+    return __get_rows_and_cols(sql_cmd)
+
+def get_top_products_count() -> int:    
+    sql_cmd = """select count(*) as count from [SalesLT].[vTopProductsSold]"""
+    return __getcount(sql_cmd)
 
 def get_top_products_csv_text():
     logger.info("Getting top products as text")
@@ -170,35 +159,22 @@ def get_top_products_csv_text():
         text += f"{row['ProductId']},{row['category']},{row['model']},{row['description']},{row['TotalQty']}\n"
     return text
 
-def get_top_products_count() -> int:
-    cursor = conn.cursor()
-    sql_cmd = """select count(*) as count from [SalesLT].[vTopProductsSold]"""
-    cursor.execute(sql_cmd)
-    row = cursor.fetchone()
-    return row['count']
-
 def get_order_details():
-    cursor = conn.cursor()
-    sql_cmd = """select * from [SalesLT].[vOrderDetails] order by OrderQty desc"""
-    cursor.execute(sql_cmd)
-    columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
-    rows = cursor.fetchall()    
-    return {'columns':columns,'rows':rows}
+    sql_cmd = """select * from [SalesLT].[vOrderDetails] order by CustomerID,SalesOrderID,OrderQty desc"""
+    return __get_rows_and_cols(sql_cmd)
 
-def get_order_details():
-    cursor = conn.cursor()
-    sql_cmd = """select * from [SalesLT].[vOrderDetails] order by CustomerID,SalesOrderID,ProductID"""
-    cursor.execute(sql_cmd)
-    rows = cursor.fetchall()    
-    columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
-    return {'columns':columns,'rows':rows}
+# def get_order_details():
+#     cursor = conn.cursor()
+#     sql_cmd = """select * from [SalesLT].[vOrderDetails] order by CustomerID,SalesOrderID,ProductID"""
+#     cursor.execute(sql_cmd)
+#     rows = cursor.fetchall()    
+#     columns = [{'key':column[0],'name':column[0],'resizable':True} for column in cursor.description]
+#     return {'columns':columns,'rows':rows}
 
 def get_order_details_count():
-    cursor = conn.cursor()
     sql_cmd = """select count(*) as count from [SalesLT].[vOrderDetails]"""
-    cursor.execute(sql_cmd)
-    row = cursor.fetchone()
-    return row['count']
+    return __getcount(sql_cmd)
+
 
 def get_all_counts():
     results = {
@@ -211,6 +187,10 @@ def get_all_counts():
     return results
 
 def create_directory(folder:str):
+    """Create a directory if it does not exist.
+    args:
+        folder: the folder to create
+    """
     if not os.path.exists(folder):
         os.makedirs(folder)
 
