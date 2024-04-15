@@ -21,6 +21,7 @@ const Settings = {
     max_token: '500',
     temperature: '0.3',
 }
+
 const Counts = {
     customers: 0,
     topCustomers: 0,
