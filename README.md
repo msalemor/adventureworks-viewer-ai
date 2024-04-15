@@ -35,13 +35,13 @@ graph LR;
 
 ### Database
 
-- Deploy Azure SQL Database with AdventuresWorks to Azure
-- Execute the scripts at: `src/backend/database/sql_views_script.sql` to add the supporting views
+This app leverages the SQL Adventurework database data. However, additional views need to be deployed. You will need to:
 
-#### Image
+- Deploy Azure SQL Database with AdventuresWorks to Azure
 
 ![A screen capture of Advetureworks AI viewer showing getting data in differente modes.](images/azure-sql-sample-data.png)
 
+- Execute the scripts at: `src/backend/database/sql_views_script.sql` to add the supporting views
 
 ### Backend - Python
 
