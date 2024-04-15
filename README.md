@@ -12,13 +12,13 @@ A demo application to showcase adding intelligence to an application at differen
 graph LR;
   A((User))<-->F(Frontend)
   F<-->B(Backend)
-  B<-->O(GPTBot)
-  B<-->Asst(Assistants API Bot)
-  B<-->SQL(Sqbot)
-  B<-->M(Multiagent Bot<br/>Proxy Agent<br/>Semantic Processing)
-  M<-->O
-  M<-->SQL
-  M<-->Asst
+  B<--GptBot-->O(GPTBot)
+  B<--Assistants API Bot-->Asst(Assistants API Bot)
+  B<--SQLBot-->SQL(Sqbot)
+  B<--MultiagentBot-->M(Multiagent Bot<br/>Proxy Agent<br/>Semantic Processing)
+  M<--Other<br/>Intent-->O
+  M<--SQL Scripts<br/>Intent-->SQL
+  M<--Charts<br/>Intent-->Asst
 ```
 
 ### Application Options
