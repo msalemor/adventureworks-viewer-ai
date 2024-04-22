@@ -203,6 +203,8 @@ const App = () => {
                 return '**Chatbot:** is connected to top customers and products. Examples:\n- Write a demand letter to the customer with the highest balance?\n- What are the top 5 products sold?'
             case Mode.SqlBot:
                 return "**Sqlbot:** is connected to all tables including customers, top customers, products, top products, and orders. Examples:\n\n- What customers are in the United States?\n- What products have 'bike' in the description?"
+            case Mode.RAG:
+                return '**RAG:** is connected to product maintenance information. Examples:\n- What are the best practices to maintain a mountain bike?'
             case Mode.Assistant:
                 return '**Assistants API bot:** is connected to top customers and products.\Examples:\n- Create a chart of the sales by country.\n- What are the top 5 products sold?'
             case Mode.MultiAgent:
@@ -403,7 +405,7 @@ const App = () => {
                     {openinfoarea &&
                         <div id="infoarea" className="h-[100px] bg-yellow-100 text-black">
                             <div className="flex">
-                                <div className="h-full overflow-auto">
+                                <div className="flex flex-grow overflow-auto">
                                     <Markdown className='w-full h-[100px] p-2'>{getModeHelp()}</Markdown>
                                 </div>
                                 <button className="px-1 outline-none top-9"
