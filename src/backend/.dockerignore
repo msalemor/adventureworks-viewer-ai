@@ -2,3 +2,4 @@ __pychache__
 .dockerignore
 .env
 .gitignore
+rag_docs/*

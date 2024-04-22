@@ -26,3 +26,14 @@ class ChatMessage(BaseModel):
     content:str
     columns:list = []
     rows:list = []
+
+class AISearchResult:
+    def __init__(self, row:dict):
+        self.searchScore = row['@search.score']
+        self.rerankerScore = row['@search.rerankerScore']
+        self.ckunk_id = row['chunk_id']
+        self.parent_id = row['parent_id']
+        self.chunk = row['chunk']
+        self.title = row['title']
+    def __str__(self) -> str:
+        return f'{self.ckunk_id} - {self.title} - {self.chunk}'

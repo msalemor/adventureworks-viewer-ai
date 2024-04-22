@@ -13,12 +13,14 @@ from kcvstore import KCVStore
 from AgentSettings import AgentSettings
 from AssistantAgent import AssistantAgent
 from GPTAgent import GPTAgent
+from RAGAgentAISearch import RAGAgentAISearch
 from SQLAgent import SQLAgent
 import database as rep
 from AgentRegistration import AgentRegistration
 from AgentProxy import AgentProxy
 from Models import ChatRequest
 import dotenv
+import asyncio
 
 #region: Logging settings
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +38,15 @@ CORS_ORIGINS = os.getenv("CORS_ORIGINS") or "*"
 settings = AgentSettings()
 client = AzureOpenAI(azure_endpoint=settings.api_endpoint, api_key=settings.api_key, api_version=settings.api_version)
 gpt_agent = GPTAgent(settings, client)
+rag_agent = RAGAgentAISearch(settings, client)
+#rag_agent.generate_docs()
+# def wrap_ingest():
+#     asyncio.run(rag_agent.ingest_customer_and_products())
+
+# _thread = threading.Thread(target=wrap_ingest)
+# _thread.start()
+# _thread.join()
+
 sql_agent = SQLAgent(settings, client)
 store = KCVStore('settings.db')
 #endregion
@@ -95,6 +106,10 @@ def chatbot(request: ChatRequest):
 @app.post('/api/sqlbot')
 def sqlbot(request: ChatRequest):
     return sql_agent.process('user','user',request.input, context=rep.sql_schema)
+
+@app.post('/api/rag')
+def ragbot(request: ChatRequest):
+    return rag_agent.process('user','user',request.input, context=rep.sql_schema)
 #endregion
 
 #region: Assistants
@@ -174,7 +189,9 @@ sql_agent.get_context_delegate = lambda: rep.sql_schema
 
 bot_agent_registration = AgentRegistration(settings, client, "SalesIntent", "Answer questions related to customers, orders and products.", bot_agent)
 sql_bot_registration = AgentRegistration(settings, client, "SqlIntent", "Generate and process SQL statement.", sql_agent)
-assistant_registration = AgentRegistration(settings, client, "AssistantIntent", "Generate chart, bars, and graphs related customes, orders, and products.", get_assistant_agent())
+assistant_agent = get_assistant_agent()
+assistant_registration = AgentRegistration(settings, client, "AssistantIntent", "Generate chart, bars, and graphs related customes, orders, and products.", assistant_agent)
+rag_registration = AgentRegistration(settings, client, "RagIntent", "Product maintenance and usage information.", rag_agent)
 
 proxy = AgentProxy(settings, client, [bot_agent_registration, sql_bot_registration,assistant_registration])
 

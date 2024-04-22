@@ -100,6 +100,12 @@ def __get_rows_and_cols(sql_cmd:str):
     rows = cursor.fetchall()
     return {'columns':columns,'rows':rows}
 
+def __get_rows_rag(sql_cmd:str):
+    cursor = conn.cursor()
+    cursor.execute(sql_cmd)
+    return cursor.fetchall()
+
+
 def get_customers():
     sql_cmd = """select * from SalesLT.vCustomers order by LastName,FirstName"""
     return __get_rows_and_cols(sql_cmd)
@@ -112,7 +118,13 @@ def get_top_customers():
     sql_cmd = """select CustomerID,LastName,FirstName,EmailAddress,SalesPerson,City,StateProvince,CountryRegion,Total 
 from [SalesLT].[vTopCustomers]
 order by total desc"""
-    return __get_rows_and_cols(sql_cmd)    
+    return __get_rows_and_cols(sql_cmd)
+
+def get_top_customers_rag()->list:
+    sql_cmd = """select CustomerID,LastName,FirstName,EmailAddress,SalesPerson,City,StateProvince,CountryRegion,Total 
+from [SalesLT].[vTopCustomers]
+order by total desc"""
+    return __get_rows_rag(sql_cmd)
 
 def get_top_customers_count() -> int:
     sql_cmd = """select count(*) as count from [SalesLT].[vTopCustomers]"""
@@ -143,6 +155,10 @@ where culture='en'"""
 def get_top_products():
     sql_cmd = """select * from [SalesLT].[vTopProductsSold] order by TotalQty desc"""
     return __get_rows_and_cols(sql_cmd)
+
+def get_top_products_rag():
+    sql_cmd = """select * from [SalesLT].[vTopProductsSold] order by TotalQty desc"""
+    return __get_rows_rag(sql_cmd)
 
 def get_top_products_count() -> int:    
     sql_cmd = """select count(*) as count from [SalesLT].[vTopProductsSold]"""

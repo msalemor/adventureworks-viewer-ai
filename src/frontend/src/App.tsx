@@ -158,6 +158,8 @@ const App = () => {
                 //     URL = URL_BASE + '/api/rag'
             } else if (settings.mode === Mode.Assistant) {
                 URL = URL_BASE + '/api/assistants'
+            } else if (settings.mode === Mode.RAG) {
+                URL = URL_BASE + '/api/rag'
             } else if (settings.mode === Mode.MultiAgent) {
                 URL = URL_BASE + '/api/multiagent'
             }
@@ -287,7 +289,7 @@ const App = () => {
                 <main className={'bg-blue-100 ' + (settings.mode !== Mode.NoAI ? 'w-2/3' : 'w-full')}>
                     {/* select AI mode */}
                     <nav className="bg-slate-950 text-white flex items-center h-[40px] space-x-3 px-2">
-                        <label className="font-semibold">Mode:</label>
+                        <label className="font-semibold text-lg">Mode:</label>
 
                         <input type="radio" name="opt1" id='simple'
                             checked={settings.mode === Mode.NoAI}
@@ -306,6 +308,12 @@ const App = () => {
                             onChange={() => setSettings({ ...settings, mode: Mode.SqlBot })}
                         />
                         <label htmlFor='sqlbot'>Sqlbot</label>
+
+                        <input type="radio" name="opt1" id='ragbot'
+                            checked={settings.mode === Mode.RAG}
+                            onChange={() => setSettings({ ...settings, mode: Mode.RAG })}
+                        />
+                        <label htmlFor='ragbot'>RAG</label>
 
                         <input type="radio" name="opt1" id='assistants'
                             checked={settings.mode === Mode.Assistant}

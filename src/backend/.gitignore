@@ -8,4 +8,6 @@ __pycache__/
 # Others
 .env
 wwwroot/*
+rag_docs/*
 settings.db
+*.http

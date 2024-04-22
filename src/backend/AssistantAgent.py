@@ -19,7 +19,7 @@ from Models import ChatMessage
 
 class AssistantAgent:
     """This class is used to create an assistant agent."""
-    def __init__(self, settings:AgentSettings, client:AzureOpenAI, name :str, instructions:str, data_folder:str, tools_list, keep_state: bool = False, fn_calling_delegate=None, assistant=None):
+    def __init__(self, settings:AgentSettings, client:AzureOpenAI, name :str, instructions:str, data_folder:str, tools_list: list, keep_state: bool = False, fn_calling_delegate=None, assistant=None):
         if name is None:
             raise ArgumentExceptionError("name parameter missing")
         if instructions is None:
@@ -85,10 +85,10 @@ class AssistantAgent:
             self.assistant = self.client.beta.assistants.create(
                 name=self.name,  # "Sales Assistant",
                 # "You are a sales assistant. You can answer questions related to customer orders.",
-                instructions=self.instructions,
+                instructions=self.instructions,                
+                model=self.settings.gpt_model_deployment_name,
                 tools=self.tools_list,
-                model=self.settings.model_deployment,
-                file_ids=self.file_ids
+                file_ids=self.file_ids,
             )
         else:
             self.assistant = self.client.beta.assistants.create(
@@ -96,7 +96,7 @@ class AssistantAgent:
                 # "You are a sales assistant. You can answer questions related to customer orders.",
                 instructions=self.instructions,
                 tools=self.tools_list,
-                model=self.settings.model_deployment
+                model=self.settings.gpt_model_deployment_name
             )
 
     def delete_thread(self,thread_id:str):
@@ -178,7 +178,7 @@ class AssistantAgent:
         response_content = self.client.files.content(file_id)
         return response_content.read()
 
-    def print_messages(self, name: str, messages: Iterable[MessageFile]) -> list:
+    def print_messages(self, name: str, messages: Iterable[any]) -> list:
         """Prints the messages from the assistant.
            Args:
               messages (Iterable[MessageFile]): The messages from the assistant.

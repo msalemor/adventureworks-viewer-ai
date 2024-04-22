@@ -41,7 +41,7 @@ Output in intent ONLY."""
         full_prompt = prompt_template.replace(
             "<INTENTS>", intents).replace("<QUESTION>", prompt)
         completion = self.client.chat.completions.create(
-            model=self.settings.model_deployment,
+            model=self.settings.gpt_model_deployment_name,
             messages=[
                 {
                     "role": "user",
@@ -62,7 +62,7 @@ Output in intent ONLY."""
         print(f'Intent: {intent}')
         if intent is None or intent == "OtherAgent" or intent == "Unknown":
             completion = self.client.chat.completions.create(
-                model=self.settings.model_deployment,
+                model=self.settings.gpt_model_deployment_name,
                 messages=[
                     {
                         "role": "user",

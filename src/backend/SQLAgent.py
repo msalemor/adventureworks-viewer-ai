@@ -33,7 +33,7 @@ class SQLAgent:
         
         # Configure and exectue the completion
         completion = self.client.chat.completions.create(
-                model=self.settings.model_deployment,
+                model=self.settings.gpt_model_deployment_name,
                 messages=[
                     {
                         "role": "system",

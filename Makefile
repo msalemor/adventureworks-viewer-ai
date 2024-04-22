@@ -18,7 +18,7 @@ build-ui-cs: clean-cs
 	cp -r src/frontend/dist/* src/csbackend/wwwroot
 
 TAG_NAME=alemoracr.azurecr.io/pyadventureviewer
-TAG_VERSION=0.0.12
+TAG_VERSION=0.0.13
 docker-build-py: build-ui-py
 	cd src/backend && docker build -t $(TAG_NAME):$(TAG_VERSION) .
 
