@@ -17,7 +17,7 @@ graph LR;
   B<-->RAG
   B<--Assistants API Bot-->Asst(Assistants API Bot)
   B<--MultiagentBot-->M(Multiagent Bot<br/>Proxy Agent<br/>Semantic Processing)
-  M<--Other<br/>Intent-->O
+  M<--Other<br/>Unknown<br/>Intent-->O
   M<--SQL Scripts<br/>Intent-->SQL
   M<--Charts<br/>Intent-->Asst
   M<--RAG<br/>Intent-->RAG
