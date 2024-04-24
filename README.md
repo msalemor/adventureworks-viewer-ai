@@ -56,6 +56,13 @@ This app leverages the SQL Adventurework database data. However, additional view
 
 ### Backend - C# (coming soon)
 
+- .NET 8
+- Packages:
+  - Azure OpenAI
+  - Azure Assistants API
+  - Scriban
+  - Dotnet.Env
+
 ### Frontend - React
 
 - React
