@@ -29,6 +29,7 @@ graph LR;
 | --------- | ----------- |
 | No AI | A user can click on the icons to show the data on the table on the grid in the UI. |
 | Chatbot | A user can ask questions related to top customers and products. |
+| RAG | A user can ask questions about product information. |
 | Sqlbot | A user can ask the system to generate SQL statement. The SQL statements are then executed and presented on the grid in the UI. |
 | Assistants API Bot | A user can ask the system to perform complex data analysis related to top customers and top products and generate bars and charts. |
 | Multiagent Bot | This Bot will decide which agent to call (Chatbot, SQLbot or Assistant Bot based on the user's intent and will respond accordingly. |
