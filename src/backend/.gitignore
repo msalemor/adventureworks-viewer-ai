@@ -11,3 +11,5 @@ wwwroot/*
 rag_docs/*
 settings.db
 *.http
+
+.python-version

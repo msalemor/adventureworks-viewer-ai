@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text;
 using Microsoft.Data.SqlClient;
 using Microsoft.VisualBasic;
 
@@ -99,33 +100,42 @@ A: SELECT DISTINCT vCustomers.CountryRegion FROM SalesLT.vCustomers INNER JOIN S
     //     rows = cursor.fetchall()
     //     return {'columns':columns,'rows':rows}  
 
-    private async Task<Tuple<List<object>, List<object>>> GetRowsAndCols(string sqlCmd)
+    public async Task<Tuple<List<object>, List<object>>> GetRowsAndCols(string sqlCmd)
     {
-        var conn = GetConnection();
-        await conn.OpenAsync();
-        //var sql_cmd = "select * from SalesLT.vCustomers order by LastName,FirstName";
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = sqlCmd;
-
-        using var reader = await cmd.ExecuteReaderAsync();
-        var columns = new List<object>();
-        for (int i = 0; i < reader.FieldCount; i++)
+        try
         {
-            columns.Add(new { key = reader.GetName(i), name = reader.GetName(i), resizable = true });
-        }
+            var conn = GetConnection();
+            await conn.OpenAsync();
+            //var sql_cmd = "select * from SalesLT.vCustomers order by LastName,FirstName";
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sqlCmd;
 
-        var rows = new List<object>();
-        while (await reader.ReadAsync())
-        {
-            var row = new Dictionary<string, object?>();
+            using var reader = await cmd.ExecuteReaderAsync();
+            var columns = new List<object>();
             for (int i = 0; i < reader.FieldCount; i++)
             {
-                row[reader.GetName(i)] = reader.GetValue(i) == DBNull.Value ? null : reader.GetValue(i);
+                columns.Add(new { key = reader.GetName(i), name = reader.GetName(i), resizable = true });
             }
-            rows.Add(row);
-        }
 
-        return new Tuple<List<object>, List<object>>(columns, rows);
+            var rows = new List<object>();
+            while (await reader.ReadAsync())
+            {
+                var row = new Dictionary<string, object?>();
+                for (int i = 0; i < reader.FieldCount; i++)
+                {
+                    row[reader.GetName(i)] = reader.GetValue(i) == DBNull.Value ? null : reader.GetValue(i);
+                }
+                rows.Add(row);
+            }
+
+            return new Tuple<List<object>, List<object>>(columns, rows);
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.ToString());
+            return new Tuple<List<object>, List<object>>([], []);
+        }
     }
 
 
@@ -149,8 +159,7 @@ A: SELECT DISTINCT vCustomers.CountryRegion FROM SalesLT.vCustomers INNER JOIN S
     }
     public async Task<Tuple<List<object>, List<object>>> GetTopCustomers()
     {
-        return await GetRowsAndCols(@"CustomerID,LastName,FirstName,EmailAddress,SalesPerson,
-City,StateProvince,CountryRegion,Total from [SalesLT].[vTopCustomers] order by Total desc");
+        return await GetRowsAndCols(@"select * from [SalesLT].[vTopCustomers] order by Total desc");
     }
 
     public async Task<int> GetTopCustomersCount()
@@ -184,6 +193,38 @@ City,StateProvince,CountryRegion,Total from [SalesLT].[vTopCustomers] order by T
     public async Task<int> GetOrderDetailsCount()
     {
         return await GetCount("select count(*) from SalesLT.vOrderDetails");
+    }
+
+    public string GetTopCustomerCSV()
+    {
+        var conn = GetConnection();
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "select * from SalesLT.vTopCustomers order by Total desc";
+        using var reader = cmd.ExecuteReader();
+        var csv = new StringBuilder();
+        csv.AppendLine(string.Join(",", Enumerable.Range(0, reader.FieldCount).Select(reader.GetName)));
+        while (reader.Read())
+        {
+            csv.AppendLine(string.Join(",", Enumerable.Range(0, reader.FieldCount).Select(reader.GetValue)));
+        }
+        return csv.ToString();
+    }
+
+    public string GetTopProductsCSV()
+    {
+        var conn = GetConnection();
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "select * from SalesLT.vTopProductsSold order by TotalQty desc";
+        using var reader = cmd.ExecuteReader();
+        var csv = new StringBuilder();
+        csv.AppendLine(string.Join(",", Enumerable.Range(0, reader.FieldCount).Select(reader.GetName)));
+        while (reader.Read())
+        {
+            csv.AppendLine(string.Join(",", Enumerable.Range(0, reader.FieldCount).Select(reader.GetValue)));
+        }
+        return csv.ToString();
     }
 
 }

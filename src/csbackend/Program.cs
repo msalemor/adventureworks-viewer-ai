@@ -1,5 +1,10 @@
+using System.Data;
+using agents;
+using Azure;
+using Azure.AI.OpenAI;
 using Database;
 using dotenv.net;
+using models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +21,7 @@ builder.Services.AddCors(policy =>
             .AllowAnyHeader();
     });
 });
+
 DotEnv.Load();
 var connStr = Environment.GetEnvironmentVariable("CONN_STR") ?? "";
 if (string.IsNullOrEmpty(connStr))
@@ -28,6 +34,21 @@ DatabaseUtil db = new()
     CONNECTION_STRING = connStr
 };
 builder.Services.AddSingleton(db);
+
+AgentSettings settings = new();
+OpenAIClient client = new(new Uri(settings.API_Endpoint), new AzureKeyCredential(settings.API_Key));
+
+GPTAgent gptAgent = new(settings, client);
+SQLAgent sqlAgent = new(settings, client, db);
+AgentRegistration gptAgentRegistration = new("SalesIntent", "Answer questions related to customers, orders and products.", gptAgent, settings, client);
+AgentRegistration sqlAgentRegistration = new("SqlIntent", "Generate and process SQL statement.", sqlAgent, settings, client);
+ProxyAgent proxyAgent = new([gptAgentRegistration, sqlAgentRegistration], settings, client);
+var topCustomersCSV = db.GetTopProductsCSV();
+var topProductsCSV = db.GetTopCustomerCSV();
+
+builder.Services.AddSingleton(gptAgent);
+builder.Services.AddSingleton(sqlAgent);
+builder.Services.AddSingleton(proxyAgent);
 
 var app = builder.Build();
 
@@ -60,9 +81,9 @@ app.UseCors();
 // .WithOpenApi();
 
 #region APIs
-var group = app.MapGroup("/api/v1");
+var group = app.MapGroup("/api");
 
-group.MapGet("/api/reindex", (DatabaseUtil db) =>
+group.MapGet("/reindex", (DatabaseUtil db) =>
 {
     var status = new { Status = "OK" };
     return Results.Ok(status);
@@ -70,7 +91,7 @@ group.MapGet("/api/reindex", (DatabaseUtil db) =>
 .WithName("Reindex")
 .WithOpenApi();
 
-group.MapGet("/api/status", () =>
+group.MapGet("/status", () =>
 {
     var status = new { Status = "OK" };
     return Results.Ok(status);
@@ -81,15 +102,15 @@ group.MapGet("/api/status", () =>
 // @app.get("/api/counts")
 // def read_data():
 //     return rep.get_all_counts()
-group.MapGet("/api/counts", async (DatabaseUtil db) =>
+group.MapGet("/counts", async (DatabaseUtil db) =>
 {
     var counts = new
     {
         customers = await db.GetCustomerCount(),
-        topcustomers = await db.GetTopCustomersCount(),
+        topCustomers = await db.GetTopCustomersCount(),
         products = await db.GetProductsCount(),
         topProducts = await db.GetTopProductsCount(),
-        orders = await db.GetOrderDetailsCount()
+        orderDetails = await db.GetOrderDetailsCount()
     };
     return Results.Ok(counts);
 })
@@ -99,7 +120,7 @@ group.MapGet("/api/counts", async (DatabaseUtil db) =>
 // @app.get("/api/customers")
 // def read_data():
 //     return rep.get_customers()
-group.MapGet("/api/customers", async (DatabaseUtil db) =>
+group.MapGet("/customers", async (DatabaseUtil db) =>
 {
     var (columns, rows) = await db.GetCustomers();
     return new { columns, rows };
@@ -110,7 +131,7 @@ group.MapGet("/api/customers", async (DatabaseUtil db) =>
 // @app.get("/api/customers/top")
 // def read_data():
 //     return rep.get_top_customers()
-group.MapGet("/api/customers/top", async (DatabaseUtil db) =>
+group.MapGet("/customers/top", async (DatabaseUtil db) =>
 {
     var (columns, rows) = await db.GetTopCustomers();
     return new { columns, rows };
@@ -121,7 +142,7 @@ group.MapGet("/api/customers/top", async (DatabaseUtil db) =>
 // @app.get("/api/products")
 // def read_data():
 //     return rep.get_products()
-group.MapGet("/api/products", async (DatabaseUtil db) =>
+group.MapGet("/products", async (DatabaseUtil db) =>
 {
     var (columns, rows) = await db.GetProducs();
     return new { columns, rows };
@@ -131,7 +152,7 @@ group.MapGet("/api/products", async (DatabaseUtil db) =>
 // @app.get("/api/products/sold")
 // def read_data():
 //     return rep.get_top_products()
-group.MapGet("/api/products/sold", async (DatabaseUtil db) =>
+group.MapGet("/products/top", async (DatabaseUtil db) =>
 {
     var (columns, rows) = await db.GetTopProducs();
     return new { columns, rows };
@@ -142,32 +163,34 @@ group.MapGet("/api/products/sold", async (DatabaseUtil db) =>
 // @app.get("/api/orders")
 // def read_data():
 //     return rep.get_order_details()
-group.MapGet("/api/orders", async (DatabaseUtil db) =>
+group.MapGet("/orders", async (DatabaseUtil db) =>
 {
     var (columns, rows) = await db.GetOrderDetails();
     return new { columns, rows };
 })
 .WithName("orders")
 .WithOpenApi();
-// @app.get("/api/sales/count")
-// def read_data():
-//     return rep.get_top_sales_count()
-// group.MapGet("/api/sales/count", async () =>
-// {
-//     var count = await DatabaseUtil.GetOrderDetailsCount();
-//     return new { count };
-// })
-// .WithName("ordersCount")
-// .WithOpenApi();
 
-// @app.post('/api/chatbot')
-// def chatbot(request: ChatRequest):
-//     return gpt_agent.process('user','user',request.input,context=rep.get_top_customers_csv_as_text()+rep.get_top_products_csv_text())
+group.MapPost("/chatbot", async (ChatRequest request, GPTAgent gptAgent) =>
+{
+    return await gptAgent.ProcessAsync("user", "user", request.input, request.max_tokens, request.temperature, topCustomersCSV + topProductsCSV);
+})
+.WithName("chatbot")
+.WithOpenApi();
 
-// @app.post('/api/sqlbot')
-// def sqlbot(request: ChatRequest):
-//     return sql_agent.process('user','user',request.input, context=rep.sql_schema)
+group.MapPost("/sqlbot", async (ChatRequest request, SQLAgent sqlAgent) =>
+{
+    return await sqlAgent.ProcessAsync("user", "user", request.input, request.max_tokens, request.temperature, DatabaseUtil.sql_schema);
+})
+.WithName("sqlbot")
+.WithOpenApi();
 
+group.MapPost("/multiagent", async (ChatRequest request, ProxyAgent proxyAgent) =>
+{
+    return await proxyAgent.ProcessAsync("user", "user", request.input);
+})
+.WithName("multiagent")
+.WithOpenApi();
 
 #endregion
 
@@ -179,7 +202,4 @@ app.UseDefaultFiles("index.html");
 
 #endregion
 
-// record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-// {
-//     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-// }
+
