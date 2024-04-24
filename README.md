@@ -13,12 +13,14 @@ graph LR;
   A((User))<-->F(Frontend)
   F<-->B(Backend)
   B<--GptBot-->O(GPTBot)
-  B<--Assistants API Bot-->Asst(Assistants API Bot)
   B<--SQLBot-->SQL(Sqbot)
+  B<-->RAG
+  B<--Assistants API Bot-->Asst(Assistants API Bot)
   B<--MultiagentBot-->M(Multiagent Bot<br/>Proxy Agent<br/>Semantic Processing)
   M<--Other<br/>Intent-->O
   M<--SQL Scripts<br/>Intent-->SQL
   M<--Charts<br/>Intent-->Asst
+  M<--RAG<br/>Intent-->RAG
 ```
 
 ### Application Options
