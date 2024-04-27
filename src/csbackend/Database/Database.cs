@@ -1,6 +1,7 @@
 using System.Data;
 using System.Text;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Localization;
 using Microsoft.VisualBasic;
 
 namespace Database;
@@ -72,10 +73,12 @@ A: SELECT DISTINCT vCustomers.CountryRegion FROM SalesLT.vCustomers INNER JOIN S
 ";
 
     public string CONNECTION_STRING { get; set; } = null!;
-    private SqlConnection GetConnection() => new(CONNECTION_STRING);
+
+    private SqlConnection GetConnection() => new(CONNECTION_STRING.Replace("\"", ""));
 
     public async Task<int> CanConnect()
     {
+
         try
         {
             var conn = GetConnection();

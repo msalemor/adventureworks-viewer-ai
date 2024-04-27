@@ -1,7 +1,7 @@
-using System.Data;
 using agents;
 using Azure;
 using Azure.AI.OpenAI;
+using Azure.AI.OpenAI.Assistants;
 using Database;
 using dotenv.net;
 using models;
@@ -22,27 +22,63 @@ builder.Services.AddCors(policy =>
     });
 });
 
+
 DotEnv.Load();
+KCVStore kcv = new("Data Source=./cssettings.db;");
+builder.Services.AddSingleton(kcv);
+
+// Get the connection string from the environment variables
 var connStr = Environment.GetEnvironmentVariable("CONN_STR") ?? "";
 if (string.IsNullOrEmpty(connStr))
 {
-    Console.WriteLine("The environment variable CONN_STR is missing.");
+    Console.WriteLine("Database connection string is empty and is required.");
     Environment.Exit(1);
 }
+// Create a new instance of the DatabaseUtil class
 DatabaseUtil db = new()
 {
-    CONNECTION_STRING = connStr
+    CONNECTION_STRING = connStr,
 };
+// Add the DatabaseUtil instance to the service container
 builder.Services.AddSingleton(db);
 
 AgentSettings settings = new();
 OpenAIClient client = new(new Uri(settings.API_Endpoint), new AzureKeyCredential(settings.API_Key));
+AssistantsClient asstClient = new(new Uri(settings.API_Endpoint), new AzureKeyCredential(settings.API_Key));
 
 GPTAgent gptAgent = new(settings, client);
 SQLAgent sqlAgent = new(settings, client, db);
-AgentRegistration gptAgentRegistration = new("SalesIntent", "Answer questions related to customers, orders and products.", gptAgent, settings, client);
-AgentRegistration sqlAgentRegistration = new("SqlIntent", "Generate and process SQL statement.", sqlAgent, settings, client);
-ProxyAgent proxyAgent = new([gptAgentRegistration, sqlAgentRegistration], settings, client);
+
+
+async Task<AssistantsAPIAgent> LoadOrCreateAssistant()
+{
+    AssistantsAPIAgent asstAgent;
+    var assistantID = await kcv.Get("assistant", "id");
+    try
+    {
+        if (string.IsNullOrEmpty(assistantID))
+        {
+            throw new RequestFailedException("Assistant ID not found in KCV store.");
+        }
+        asstAgent = new(settings, asstClient, kcv)
+        {
+            Assistant = await asstClient.GetAssistantAsync(assistantID)
+        };
+    }
+    catch (Exception)
+    {
+        asstAgent = new AssistantsAPIAgent(settings, asstClient, kcv);
+        await asstAgent.CreateAssistantAsync("Sales Assistant", "You are a friendly assistant that can generate general math related chart and graphs and bars and charts related to customers, products or orders.", [], null, false);
+    }
+    return asstAgent;
+}
+var asstAgent = await LoadOrCreateAssistant();
+
+AgentRegistration gptAgentRegistration = new("SalesIntent", "Answer questions related to customers, orders and products.", gptAgent, settings);
+AgentRegistration sqlAgentRegistration = new("SqlIntent", "Generate and process SQL statement.", sqlAgent, settings);
+AgentRegistration asstAgentRegistration = new("AssistantIntent", "Generate chart or graphs related to customers, orders and products.", asstAgent, settings);
+ProxyAgent proxyAgent = new([gptAgentRegistration, sqlAgentRegistration, asstAgentRegistration], settings, client);
+
 var topCustomersCSV = db.GetTopProductsCSV();
 var topProductsCSV = db.GetTopCustomerCSV();
 
@@ -53,11 +89,11 @@ builder.Services.AddSingleton(proxyAgent);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+app.UseSwagger();
+app.UseSwaggerUI();
+//}
 app.UseCors();
 
 // var summaries = new[]
@@ -185,6 +221,46 @@ group.MapPost("/sqlbot", async (ChatRequest request, SQLAgent sqlAgent) =>
 .WithName("sqlbot")
 .WithOpenApi();
 
+group.MapPost("/rag", async (ChatRequest request, SQLAgent sqlAgent) =>
+{
+    return await gptAgent.ProcessAsync("user", "user", request.input, request.max_tokens, request.temperature, DatabaseUtil.sql_schema);
+})
+.WithName("rag")
+.WithOpenApi();
+
+group.MapPost("/assistants", async (ChatRequest request, SQLAgent sqlAgent) =>
+{
+    return await asstAgent.ProcessAsync("user", "user", request.input, request.max_tokens, request.temperature, DatabaseUtil.sql_schema);
+})
+.WithName("assistants")
+.WithOpenApi();
+
+group.MapDelete("/assistant/reset", async () =>
+{
+    var oldId = "";
+    var newId = "";
+    try
+    {
+        oldId = await kcv.Get("assistant", "id");
+        asstAgent.Assistant = await asstClient.GetAssistantAsync(oldId);
+        await asstAgent.CleanupAsync();
+    }
+    finally
+    {
+        await kcv.Delete("assistant", "id");
+    }
+    asstAgent = await LoadOrCreateAssistant();
+    newId = asstAgent.Assistant.Id;
+    if (oldId != newId)
+    {
+        return Results.Ok(new { message = $"Assistant reset successful. Old id: {oldId} - New id: {newId}" });
+    }
+
+    return Results.BadRequest(new { message = $"Assistant reset failed for: {oldId}" });
+})
+.WithName("assistants_reset")
+.WithOpenApi();
+
 group.MapPost("/multiagent", async (ChatRequest request, ProxyAgent proxyAgent) =>
 {
     return await proxyAgent.ProcessAsync("user", "user", request.input);
@@ -196,9 +272,9 @@ group.MapPost("/multiagent", async (ChatRequest request, ProxyAgent proxyAgent) 
 
 #region: App & Static Files
 
-app.Run();
 app.UseStaticFiles();
-app.UseDefaultFiles("index.html");
+app.MapFallbackToFile("index.html");
+app.Run();
 
 #endregion
 

@@ -28,7 +28,10 @@ docker-run-py:
 TAG_NAME_CS=alemoracr.azurecr.io/csadventureviewer
 TAG_VERSION_CS=0.0.1
 docker-build-cs: build-ui-cs
-	cd src/backend && docker build -t $(TAG_NAME_CS):$(TAG_VERSION_CS) .
+	cd src/csbackend && docker build -t $(TAG_NAME_CS):$(TAG_VERSION_CS) .
+
+docker-run-cs:
+	cd src/csbackend && docker run --rm --env-file=.env -p 8070:80 $(TAG_NAME_CS):$(TAG_VERSION_CS)
 
 REPO_NAME=alemoracr
 docker-push-py:
