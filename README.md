@@ -55,7 +55,7 @@ This app leverages the SQL Adventurework database data. However, additional view
 - pymssql==2.2.11
 - pillow==10.3.0
 
-### Backend - C# (coming soon)
+### Backend - C#
 
 - .NET 8
 - Packages:
@@ -76,10 +76,11 @@ This app leverages the SQL Adventurework database data. However, additional view
 
 - Install the frontend dependencies: `cd src/frontend && npm install`
 - Install the backend dependencies: `cd src/backend && pip install -r requirements.txt`
-- Create or update the evnironment variable files at: `src/backend/.env`
+- Create or update the environment variable files at: `src/backend/.env`
 
 ```bash
-DB_SERVER=<NAME>.database.windows.net
+DB_HOST=<NAME>.database.windows.net
+DB_PORT=1433
 DB_USER=<ADMIN_USER>
 DB_PASSWORD=<ADMIN_PASSWORD>
 DB_DATABASE=<DB_NAME>
@@ -96,4 +97,26 @@ OPENAPI_URL=/openapi.json
 - Start the frontend: `cd src/frontend && npm run dev`
 
 
-## Debugging - C# (Coming soon)
+## Debugging - C#
+
+- Install the frontend dependencies: `cd src/frontend && npm install`
+- Install the backend dependencies: `cd src/csbackend && dotnet restore`
+- Create or update the environment variable files at: `src/csbackend/.env`
+
+```bash
+DB_HOST=<NAME>.database.windows.net
+DB_PORT=1433
+DB_USER=<ADMIN_USER>
+DB_PASSWORD=<ADMIN_PASSWORD>
+DB_DATABASE=<DB_NAME>
+
+OPENAI_FULL_URI=https://<NAME>.openai.azure.com/openai/deployments/gpt4-1106-preview/chat/completions?api-version=2024-02-15-preview
+OPENAI_URI=https://<NAME>.openai.azure.com/
+OPENAI_KEY=<API_KEY>
+OPENAI_GPT_DEPLOYMENT=gpt4-1106-preview
+OPENAI_VERSION=2024-02-15-preview
+OPENAPI_URL=/openapi.json
+```
+
+- Start the backend: `cd src/csbackend` or `cd src/csbackend && dotnet watch run`
+- Start the frontend: `cd src/frontend && npm run dev`

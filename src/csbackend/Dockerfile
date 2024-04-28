@@ -13,6 +13,7 @@ RUN dotnet publish -c Release -o out
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /App
 COPY --from=build-env /App/out .
+COPY --from=build-env /App/cssettings.db .
 COPY --from=build-env /App/wwwroot wwwroot
 
 EXPOSE 80
