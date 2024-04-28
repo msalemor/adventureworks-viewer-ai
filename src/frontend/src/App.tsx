@@ -191,6 +191,15 @@ const App = () => {
             console.error(error)
         }
         finally {
+            // Scroll the div to the bottom
+            let messagesArea: HTMLElement | null = document.getElementById('messages')
+            if (messagesArea) {
+                //messagesArea.scrollIntoView({ block: "start" })
+                messagesArea.scrollTo({
+                    top: messagesArea.scrollHeight,
+                    behavior: "smooth",
+                });
+            }
             setInput('')
             setProcessing(false)
         }
@@ -377,7 +386,7 @@ const App = () => {
                     </section>
                 </main>
                 <aside className={settings.mode !== Mode.NoAI ? 'w-1/3 flex flex-col' : 'hidden'}>
-                    <div className={"bg-slate-950 text-white p-2 space-y-2 overflow-auto " + (openinfoarea ? "h-[calc(100vh-40px-36px-240px)]" : "h-[calc(100vh-40px-36px-140px)]")}>
+                    <div id="messages" className={"bg-slate-950 text-white p-2 space-y-2 overflow-auto " + (openinfoarea ? "h-[calc(100vh-40px-36px-240px)]" : "h-[calc(100vh-40px-36px-140px)]")}>
                         {messages.map((msg, idx) => <>
                             {msg.role === 'user' && <div key={idx} className='bg-slate-700 p-2 rounded-lg w-[95%] ml-auto'>
                                 {msg.content}
@@ -415,7 +424,7 @@ const App = () => {
 
                         </div>}
                     <div className="flex bg-slate-900 p-2 h-[150px]">
-                        <textarea className='w-full outline-none px-1 rounded-lg py-1'
+                        <textarea className='w-full outline-none px-1 rounded-lg py-1 resize-none'
                             value={input}
                             onChange={(evt) => setInput(evt.target.value)}
                         ></textarea>
@@ -426,7 +435,7 @@ const App = () => {
                             <button className='outline-none text-2xl px-1 text-red-600' title='Clear Messages'
                                 onClick={() => setMessages([])}
                             ><MdOutlineClear /></button>
-                            <button className='outline-none text-2xl px-1 text-slate-300' title='Infomation and Samples'
+                            <button className='outline-none text-2xl px-1 text-slate-300' title='Information and Samples'
                                 onClick={() => setOpeninfoarea(true)}
                             ><IoMdInformationCircleOutline /></button>
                         </div>

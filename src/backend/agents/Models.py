@@ -1,7 +1,7 @@
 
 from openai import AzureOpenAI
 from pydantic import BaseModel
-from AgentSettings import AgentSettings
+from .AgentSettings import AgentSettings
 
 class BaseAgent:
     # This is the base class for all agents

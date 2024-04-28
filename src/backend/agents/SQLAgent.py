@@ -1,7 +1,7 @@
 from openai import AzureOpenAI
-from AgentSettings import AgentSettings
-from Models import ChatMessage
-import database as rep
+from .AgentSettings import AgentSettings
+from .Models import ChatMessage
+#import database as rep
 
 class SQLAgent:
     """This class is used to connect to a GPT model to submit a Prompt for Completion. The completion is then executed as a SQL statement."""
@@ -15,7 +15,7 @@ class SQLAgent:
         # Used in multi-agent mode to get addtional context
         self.get_context_delegate = None
 
-    def process(self, user_name: str, user_id: str, prompt: str,max_tokens:int=500,temperature:float=0.3,context:str=None) -> list:
+    def process(self, user_name: str, user_id: str, prompt: str,max_tokens:int=500,temperature:float=0.3,context:str=None) -> list[ChatMessage]:
         """This method is used to process the prompt and return the SQL statement. The SQL statement is then executed and the results are returned.
         args:
             user_name: str - The name of the user
@@ -58,11 +58,11 @@ class SQLAgent:
         sql_statement = sql_statement.replace(";","")
 
         # Execute the SQL statement
-        row_and_cols= rep.sql_executor(sql_statement)
+        #row_and_cols= rep.sql_executor(sql_statement)
 
         # Return the columns and rows
-        columns = row_and_cols['columns']
-        rows = row_and_cols['rows']
+        columns = [] #row_and_cols['columns']
+        rows = [] #row_and_cols['rows']
         return [
             ChatMessage(role='user',user_name=user_name,user_id=user_id,content=prompt,columns=[],rows=[]),
             ChatMessage(role='assistant',user_name=user_name,user_id=user_id,content=sql_statement,columns=columns,rows=rows)

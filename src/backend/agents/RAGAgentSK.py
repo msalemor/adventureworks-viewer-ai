@@ -1,8 +1,10 @@
-from openai import AzureOpenAI
-from AgentSettings import AgentSettings
-from Models import ChatMessage
 import json
 import database as rep
+
+from openai import AzureOpenAI
+from agents import AgentSettings
+from agents import ChatMessage
+
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, AzureTextEmbedding
 from semantic_kernel.core_plugins import TextMemoryPlugin

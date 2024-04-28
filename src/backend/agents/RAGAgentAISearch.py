@@ -1,10 +1,11 @@
-from openai import AzureOpenAI
-from AgentSettings import AgentSettings
-from Models import AISearchResult, ChatMessage
 import json
 import os
 import requests
 import database as rep
+
+from openai import AzureOpenAI
+from .AgentSettings import AgentSettings
+from .Models import AISearchResult, ChatMessage
 
 class RAGAgentAISearch:
     """This class is used to connect to a GPT model to submit a Prompt for Completion."""

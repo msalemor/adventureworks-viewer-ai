@@ -1,8 +1,8 @@
 from openai import AzureOpenAI
-from AgentRegistration import AgentRegistration
-from AgentSettings import AgentSettings
-from ArgumentException import ArgumentExceptionError
-from Models import ChatMessage
+from .AgentRegistration import AgentRegistration
+from .AgentSettings import AgentSettings
+from .ArgumentException import ArgumentExceptionError
+from .Models import ChatMessage
 
 
 class AgentProxy:

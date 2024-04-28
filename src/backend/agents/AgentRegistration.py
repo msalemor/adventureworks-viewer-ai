@@ -1,8 +1,8 @@
-from AgentSettings import AgentSettings
+from .AgentSettings import AgentSettings
 from openai import AzureOpenAI
-from ArgumentException import ArgumentExceptionError
-from AssistantAgent import AssistantAgent
-from Models import BaseAgent
+from .ArgumentException import ArgumentExceptionError
+from .AssistantAgent import AssistantAgent
+from .Models import BaseAgent
 
 class AgentRegistration:
     """This class is used to register an agent with the proxy."""

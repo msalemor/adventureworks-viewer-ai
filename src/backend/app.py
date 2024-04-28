@@ -1,11 +1,9 @@
 import uvicorn
 import logging
-from AgentSettings import AgentSettings
+
 from openai import AzureOpenAI
-from Models import AISearchResult
-from RAGAgentAISearch import RAGAgentAISearch
-
-
+from agents.Models import AISearchResult
+from agents import RAGAgentAISearch, AgentSettings
 
 
 # Use this file mainly for easier debugging from VS Code

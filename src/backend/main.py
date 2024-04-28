@@ -10,15 +10,10 @@ from fastapi.staticfiles import StaticFiles
 
 from openai import AzureOpenAI
 from kcvstore import KCVStore
-from AgentSettings import AgentSettings
-from AssistantAgent import AssistantAgent
-from GPTAgent import GPTAgent
-from RAGAgentAISearch import RAGAgentAISearch
-from SQLAgent import SQLAgent
+from agents import AgentSettings, AgentRegistration, AgentProxy, AssistantAgent, GPTAgent, SQLAgent, RAGAgentAISearch, SQLAgent 
+from agents.Models import ChatRequest
+
 import database as rep
-from AgentRegistration import AgentRegistration
-from AgentProxy import AgentProxy
-from Models import ChatRequest
 import dotenv
 import asyncio
 
@@ -105,7 +100,17 @@ def chatbot(request: ChatRequest):
 
 @app.post('/api/sqlbot')
 def sqlbot(request: ChatRequest):
-    return sql_agent.process('user','user',request.input, context=rep.sql_schema)
+    results = sql_agent.process('user','user',request.input, context=rep.sql_schema)
+    # Find the assistant message
+    for result in results:
+        if result.role == "assistant":
+            sql_statement = result.content
+            row_and_cols= rep.sql_executor(sql_statement)
+            columns = row_and_cols['columns']
+            rows = row_and_cols['rows']
+            result.columns = columns
+            result.rows = rows
+    return results
 
 @app.post('/api/rag')
 def ragbot(request: ChatRequest):
@@ -213,7 +218,7 @@ if reindex_content_files=="Yes":
     reindex()
 #endregion
 
-#region: Azure Web App - Freee tier keep alive
+#region: Azure Web App - Free tier keep alive
 async def keep_alive():
     print("Keep alive")
     while True:

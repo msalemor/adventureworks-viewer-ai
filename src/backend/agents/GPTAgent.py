@@ -1,7 +1,7 @@
 from openai import AzureOpenAI
-from AgentSettings import AgentSettings
-from Models import ChatMessage
-import database as rep
+from .AgentSettings import AgentSettings
+from .Models import ChatMessage
+#import database as rep
 
 class GPTAgent:
     """This class is used to connect to a GPT model to submit a Prompt for Completion."""

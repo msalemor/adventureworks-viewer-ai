@@ -5,7 +5,7 @@ import time
 import logging
 from datetime import datetime
 from pathlib import Path
-from AgentSettings import AgentSettings
+
 
 from openai import AzureOpenAI
 from openai.types.beta.assistant import Assistant
@@ -13,8 +13,10 @@ from openai.types.beta.threads.text_content_block import TextContentBlock
 from openai.types.beta.threads.image_file_content_block import ImageFileContentBlock
 from openai.types.beta.threads.messages import MessageFile
 from openai.types import FileObject
-from ArgumentException import ArgumentExceptionError
-from Models import ChatMessage
+
+from .AgentSettings import AgentSettings
+from .ArgumentException import ArgumentExceptionError
+from .Models import ChatMessage
 
 
 class AssistantAgent:
