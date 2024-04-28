@@ -6,17 +6,17 @@ logger = logging.getLogger("repo")
 
 dotenv.load_dotenv()
 
-DB_SERVER = os.getenv('DB_HOST')
+DB_HOST = os.getenv('DB_HOST')
 DB_PORT = os.getenv('DB_PORT')
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_DATABASE = os.getenv('DB_DATABASE')
 
-if DB_SERVER is None or DB_USER is None or DB_PASSWORD is None or DB_DATABASE is None:
-    raise ValueError("Missing environment variables DB_SERVER, DB_USER, DB_PASSWORD, DB_DATABASE")
+if DB_HOST is None or DB_USER is None or DB_PASSWORD is None or DB_DATABASE is None:
+    raise ValueError("Missing environment variables DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE")
 
 conn = pymssql.connect(
-    server=DB_SERVER,
+    server=DB_HOST,
     user=DB_USER,
     password=DB_PASSWORD,
     database=DB_DATABASE,
