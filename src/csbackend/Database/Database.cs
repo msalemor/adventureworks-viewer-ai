@@ -198,36 +198,60 @@ A: SELECT DISTINCT vCustomers.CountryRegion FROM SalesLT.vCustomers INNER JOIN S
         return await GetCount("select count(*) from SalesLT.vOrderDetails");
     }
 
-    public string GetTopCustomerCSV()
+    public async Task<string> GetTopCustomerCSV()
     {
         var conn = GetConnection();
-        conn.Open();
+        await conn.OpenAsync();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = "select * from SalesLT.vTopCustomers order by Total desc";
-        using var reader = cmd.ExecuteReader();
+        using var reader = await cmd.ExecuteReaderAsync();
         var csv = new StringBuilder();
         csv.AppendLine(string.Join(",", Enumerable.Range(0, reader.FieldCount).Select(reader.GetName)));
-        while (reader.Read())
+        while (await reader.ReadAsync())
         {
             csv.AppendLine(string.Join(",", Enumerable.Range(0, reader.FieldCount).Select(reader.GetValue)));
         }
         return csv.ToString();
     }
 
-    public string GetTopProductsCSV()
+    public void CreateDirectory(string path)
+    {
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
+    }
+
+    public async Task<string> GetTopProductsCSV()
     {
         var conn = GetConnection();
-        conn.Open();
+        await conn.OpenAsync();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = "select * from SalesLT.vTopProductsSold order by TotalQty desc";
-        using var reader = cmd.ExecuteReader();
+        using var reader = await cmd.ExecuteReaderAsync();
         var csv = new StringBuilder();
         csv.AppendLine(string.Join(",", Enumerable.Range(0, reader.FieldCount).Select(reader.GetName)));
-        while (reader.Read())
+        while (await reader.ReadAsync())
         {
             csv.AppendLine(string.Join(",", Enumerable.Range(0, reader.FieldCount).Select(reader.GetValue)));
         }
         return csv.ToString();
+    }
+
+    private const string CSV_EXPORT_PATH = "wwwroot/assets/data";
+
+    public async Task ExportTopCustomersCSV()
+    {
+        CreateDirectory(CSV_EXPORT_PATH);
+        var csv = await GetTopCustomerCSV();
+        var filePath = Path.Combine(CSV_EXPORT_PATH, "top_customers.csv");
+        File.WriteAllText(filePath, csv);
+    }
+
+    public async Task ExportTopProductsCSV()
+    {
+        CreateDirectory(CSV_EXPORT_PATH);
+        var csv = await GetTopProductsCSV();
+        var filePath = Path.Combine(CSV_EXPORT_PATH, "top_products.csv");
+        File.WriteAllText(filePath, csv);
     }
 
 }

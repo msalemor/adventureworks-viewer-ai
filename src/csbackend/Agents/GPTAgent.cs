@@ -12,8 +12,8 @@ public class GPTAgent(AgentSettings? settings, OpenAIClient? client) : BaseAgent
             context += GetContent();
         }
 
-        prompt = $"{prompt}\nText: \"\"\"\n{context}\n\"\"\"";
-        var completion = await AgentUtils.CallGPTAsync(Client, Settings.GPT_Model_Deployment_Name, prompt, temperature, max_tokens);
+        var fullPrompt = $"{prompt}\nText: \"\"\"\n{context}\n\"\"\"";
+        var completion = await AgentUtils.CallGPTAsync(Client, Settings.GPT_Model_Deployment_Name, fullPrompt, temperature, max_tokens);
         if (completion is not null)
         {
             var outputMessages = new List<ChatMessage>

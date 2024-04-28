@@ -5,10 +5,8 @@ using models;
 
 namespace agents;
 
-public class SQLAgent(AgentSettings? settings, OpenAIClient? client, DatabaseUtil db) : BaseAgent(settings, client)
+public class SQLAgent(AgentSettings? settings, OpenAIClient? client) : BaseAgent(settings, client)
 {
-    public DatabaseUtil DbUtil { get; set; } = db;
-
     public override async Task<List<ChatMessage>> ProcessAsync(string user_name, string user_id, string prompt, int max_tokens = 500, float temperature = 0.3f, string context = "")
     {
         if (GetContent is not null)
@@ -40,12 +38,10 @@ public class SQLAgent(AgentSettings? settings, OpenAIClient? client, DatabaseUti
             .Replace("sql", "")
             .Replace(";", "");
 
-            var (rows, cols) = await DbUtil.GetRowsAndCols(sql_statement);
-
             return
             [
                 new("user", user_name, user_id, prompt, [], []),
-                new("assistant", user_name, user_id, sql_statement, rows, cols)
+                new("assistant", user_name, user_id, sql_statement, [], [])
             ];
 
         }

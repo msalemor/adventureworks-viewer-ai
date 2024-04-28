@@ -132,7 +132,7 @@ const App = () => {
     const getAssistantId = async () => {
         /* Fetch the assistant ID */
         try {
-            const resp = await axios.get<{ assistant_id: string }>(URL_BASE + '/api/assistant/id')
+            const resp = await axios.get<{ assistant_id: string }>(URL_BASE + '/api/assistants')
             setAssistantId(resp.data.assistant_id)
         } catch (error) {
             console.error(error)

@@ -65,10 +65,10 @@ app.add_middleware(
 @app.post("/api/reindex")
 def reindex():    
     rep.export_top_customers_csv()
-    logger.info("reindexing the top customers csv file")    
+    logger.info("reindexed the top customers csv file")    
     rep.export_top_products_csv()
     logger.info("reindexed the top products csv files")
-    return {"status": "reindex"}
+    return {"status": "CSV files recreated"}
 
 @app.get("/api/counts")
 def read_data():
@@ -150,7 +150,7 @@ def get_assistant_agent()->AssistantAgent:
         assistant_agent = reset_assistant()
     return assistant_agent
 
-@app.delete('/api/assistant/reset')
+@app.delete('/api/assistants')
 def delete_state():    
     reset_assistant()
     return {"status":"assistant reset"}
@@ -159,14 +159,14 @@ def delete_state():
 def chatbot(request: ChatRequest):    
     return get_assistant_agent().process(request.user_name,request.user_id,request.input)
 
-@app.get("/api/assistant/id")
+@app.get("/api/assistants")
 def get_assistant_id():
     val = store.get('assistant','id')
     return {"assistant_id":val or "None"}
 
 @app.get("/api/status")
 def get_app_status():
-    total = rep.get_db_status() +   rep.get_files_status()
+    total = rep.get_db_status() + rep.get_files_status()
     
     system_down = ""    
     if rep.get_db_status() == 0:
@@ -177,7 +177,7 @@ def get_app_status():
     if total ==2:
         return {"status":"Online","total":total}
     elif total ==1:
-        return {"status":f"{system_down} degrated","total":total}
+        return {"status":f"{system_down} degraded","total":total}
     elif total ==0:
         return {"status":"Offline","total":total}
     else:
@@ -195,8 +195,8 @@ sql_agent.get_context_delegate = lambda: rep.sql_schema
 bot_agent_registration = AgentRegistration(settings, client, "SalesIntent", "Answer questions related to customers, orders and products.", bot_agent)
 sql_bot_registration = AgentRegistration(settings, client, "SqlIntent", "Generate and process SQL statement.", sql_agent)
 assistant_agent = get_assistant_agent()
-assistant_registration = AgentRegistration(settings, client, "AssistantIntent", "Generate chart, bars, and graphs related customes, orders, and products.", assistant_agent)
-rag_registration = AgentRegistration(settings, client, "RagIntent", "Product maintenance and usage information.", rag_agent)
+assistant_registration = AgentRegistration(settings, client, "AssistantIntent", "Generate chart, bars, and graphs related customers, orders, and products.", assistant_agent)
+rag_registration = AgentRegistration(settings, client, "RagIntent", "Provide product maintenance and usage information.", rag_agent)
 
 proxy = AgentProxy(settings, client, [bot_agent_registration, sql_bot_registration,assistant_registration])
 

@@ -47,8 +47,13 @@ OpenAIClient client = new(new Uri(settings.API_Endpoint), new AzureKeyCredential
 AssistantsClient asstClient = new(new Uri(settings.API_Endpoint), new AzureKeyCredential(settings.API_Key));
 
 GPTAgent gptAgent = new(settings, client);
-SQLAgent sqlAgent = new(settings, client, db);
-
+SQLAgent sqlAgent = new(settings, client);
+HttpClient httpClient = new();
+builder.Services.AddSingleton(httpClient);
+RAGAgentAISearch ragAgent = new(settings, client)
+{
+    HttpClient = httpClient
+};
 
 async Task<AssistantsAPIAgent> LoadOrCreateAssistant()
 {
@@ -76,11 +81,12 @@ var asstAgent = await LoadOrCreateAssistant();
 
 AgentRegistration gptAgentRegistration = new("SalesIntent", "Answer questions related to customers, orders and products.", gptAgent, settings);
 AgentRegistration sqlAgentRegistration = new("SqlIntent", "Generate and process SQL statement.", sqlAgent, settings);
-AgentRegistration asstAgentRegistration = new("AssistantIntent", "Generate chart or graphs related to customers, orders and products.", asstAgent, settings);
-ProxyAgent proxyAgent = new([gptAgentRegistration, sqlAgentRegistration, asstAgentRegistration], settings, client);
+AgentRegistration ragAgentRegistration = new("RAGIntent", "Provide product maintenance and usage information.", ragAgent, settings);
+AgentRegistration asstAgentRegistration = new("AssistantIntent", "Generate chart, bars, and graphs related customers, orders, and products.", asstAgent, settings);
+ProxyAgent proxyAgent = new([gptAgentRegistration, sqlAgentRegistration, ragAgentRegistration, asstAgentRegistration], settings, client);
 
-var topCustomersCSV = db.GetTopProductsCSV();
-var topProductsCSV = db.GetTopCustomerCSV();
+var topCustomersCSV = await db.GetTopProductsCSV();
+var topProductsCSV = await db.GetTopCustomerCSV();
 
 builder.Services.AddSingleton(gptAgent);
 builder.Services.AddSingleton(sqlAgent);
@@ -119,18 +125,28 @@ app.UseCors();
 #region APIs
 var group = app.MapGroup("/api");
 
-group.MapGet("/reindex", (DatabaseUtil db) =>
+group.MapPost("/reindex", async (DatabaseUtil db) =>
 {
-    var status = new { Status = "OK" };
-    return Results.Ok(status);
+    await db.ExportTopCustomersCSV();
+    await db.ExportTopProductsCSV();
+    return new { status = "CSV files recreated." };
 })
-.WithName("Reindex")
+.WithName("reindex")
 .WithOpenApi();
 
-group.MapGet("/status", () =>
+group.MapGet("/status", async (DatabaseUtil db) =>
 {
-    var status = new { Status = "OK" };
-    return Results.Ok(status);
+    var status = await db.CanConnect();
+    var msg = "";
+    if (status == 1)
+    {
+        msg = "Online";
+    }
+    else
+    {
+        msg = "DB Degraded";
+    }
+    return new { status = msg, total = status };
 })
 .WithName("Status")
 .WithOpenApi();
@@ -214,9 +230,24 @@ group.MapPost("/chatbot", async (ChatRequest request, GPTAgent gptAgent) =>
 .WithName("chatbot")
 .WithOpenApi();
 
-group.MapPost("/sqlbot", async (ChatRequest request, SQLAgent sqlAgent) =>
+group.MapPost("/sqlbot", async (ChatRequest request, SQLAgent sqlAgent, DatabaseUtil db) =>
 {
-    return await sqlAgent.ProcessAsync("user", "user", request.input, request.max_tokens, request.temperature, DatabaseUtil.sql_schema);
+    var results = await sqlAgent.ProcessAsync("user", "user", request.input, request.max_tokens, request.temperature, DatabaseUtil.sql_schema);
+    List<ChatMessage> assistantMessages = new();
+    foreach (var message in results)
+    {
+        if (message.role == "user")
+        {
+            assistantMessages.Add(message);
+        }
+        if (message.role == "assistant")
+        {
+            var sql_statement = message.content;
+            var (rows, cols) = await db.GetRowsAndCols(sql_statement);
+            assistantMessages.Add(new ChatMessage("assistant", message.userId, message.userName, message.content, rows, cols));
+        }
+    }
+    return assistantMessages;
 })
 .WithName("sqlbot")
 .WithOpenApi();
@@ -228,14 +259,23 @@ group.MapPost("/rag", async (ChatRequest request, SQLAgent sqlAgent) =>
 .WithName("rag")
 .WithOpenApi();
 
+group.MapGet("/assistants", async (KCVStore kcv) =>
+{
+    var id = await kcv.Get("assistant", "id") ?? "None";
+    return Results.Ok(new { assistant_id = id });
+})
+.WithName("getassistant")
+.WithOpenApi();
+
+
 group.MapPost("/assistants", async (ChatRequest request, SQLAgent sqlAgent) =>
 {
     return await asstAgent.ProcessAsync("user", "user", request.input, request.max_tokens, request.temperature, DatabaseUtil.sql_schema);
 })
-.WithName("assistants")
+.WithName("postassistants")
 .WithOpenApi();
 
-group.MapDelete("/assistant/reset", async () =>
+group.MapDelete("/assistants", async () =>
 {
     var oldId = "";
     var newId = "";
@@ -258,7 +298,7 @@ group.MapDelete("/assistant/reset", async () =>
 
     return Results.BadRequest(new { message = $"Assistant reset failed for: {oldId}" });
 })
-.WithName("assistants_reset")
+.WithName("deleteassistants")
 .WithOpenApi();
 
 group.MapPost("/multiagent", async (ChatRequest request, ProxyAgent proxyAgent) =>
