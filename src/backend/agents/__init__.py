@@ -1,6 +1,6 @@
 # Package metadata
 __package__ = "agents"
-__version__ = "1.0.0"
+__version__ = "0.1.0"
 __author__ = "Alex Morales"
 
 # import local modules
