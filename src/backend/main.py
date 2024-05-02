@@ -202,7 +202,16 @@ proxy = AgentProxy(settings, client, [bot_agent_registration, sql_bot_registrati
 
 @app.post('/api/multiagent')
 def chatbot(request: ChatRequest):
-    return proxy.process(request.user_name,request.user_id,request.input)
+    results = proxy.process(request.user_name,request.user_id,request.input)
+    for result in results:
+        if result.role == "assistant":
+            sql_statement = result.content
+            row_and_cols= rep.sql_executor(sql_statement)
+            columns = row_and_cols['columns']
+            rows = row_and_cols['rows']
+            result.columns = columns
+            result.rows = rows
+    return results
 #endregion
 
 #region: Static Files
