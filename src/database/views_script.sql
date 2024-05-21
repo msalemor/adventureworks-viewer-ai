@@ -63,21 +63,12 @@ GO
 --         ON pmx.[ProductDescriptionID] = pd.[ProductDescriptionID];
 -- GO
 
-
-CREATE UNIQUE CLUSTERED INDEX [IX_vProductAndDescription] ON [SalesLT].[vProductAndDescription]
-(
-	[Culture] ASC,
-	[ProductID] ASC
-)WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-
-CREATE VIEW [SalesLT].[vTopProductsSold]
-AS
-    select ProductId, category, model, [description], sum(orderqty) TotalQty
-    from SalesLT.vOrderDetails
-    group by productid,category,model,[description]
-GO
-
+--CREATE UNIQUE CLUSTERED INDEX [IX_vProductAndDescription] ON [SalesLT].[vProductAndDescription]
+--(
+--	[Culture] ASC,
+--	[ProductID] ASC
+--)WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+--GO
 
 CREATE VIEW [SalesLT].[vOrderDetails]
 AS
@@ -101,4 +92,11 @@ AS
         inner join
         SalesLT.ProductDescription G
         on g.ProductDescriptionID = f.ProductDescriptionID
+GO
+
+CREATE VIEW [SalesLT].[vTopProductsSold]
+AS
+    select ProductId, category, model, [description], sum(orderqty) TotalQty
+    from SalesLT.vOrderDetails
+    group by productid,category,model,[description]
 GO
