@@ -94,6 +94,10 @@ OPENAPI_URL=/openapi.json
 ```
 
 - Start the backend: `cd src/backend && sh run.sh` or `cd src/backend && uvicorn main:app --reload`
+- Create or update the environment variable files at: `src/frontend/.env.development`
+```bash
+VITE_BASE_URL=http://localhost:8000
+```
 - Start the frontend: `cd src/frontend && npm run dev`
 
 
@@ -119,4 +123,8 @@ OPENAPI_URL=/openapi.json
 ```
 
 - Start the backend: `cd src/csbackend` or `cd src/csbackend && dotnet watch run`
+- Create or update the environment variable files at: `src/frontend/.env.development`
+```bash
+VITE_BASE_URL=http://localhost:8000
+```
 - Start the frontend: `cd src/frontend && npm run dev`
